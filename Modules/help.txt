@@ -1,0 +1,6 @@
+Command List:
+
+!announce <channel> <message> - Sends an announcement.
+!echo <phrase> - Echoes a message.
+!help - Lists all commands.
+!kalek - Praises Kalek.
