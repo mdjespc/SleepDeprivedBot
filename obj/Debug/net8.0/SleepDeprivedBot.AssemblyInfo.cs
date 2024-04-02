@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("SleepDeprivedBot")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+67d6d6a5b68679defb509a1b58acddc72bc426c5")]
 [assembly: System.Reflection.AssemblyProductAttribute("SleepDeprivedBot")]
 [assembly: System.Reflection.AssemblyTitleAttribute("SleepDeprivedBot")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
