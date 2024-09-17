@@ -42,3 +42,4 @@ C:\Users\mdj_p\Documents\SleepDeprivedBot\bin\Debug\net8.0\Microsoft.Extensions.
 C:\Users\mdj_p\Documents\SleepDeprivedBot\bin\Debug\net8.0\Microsoft.Extensions.Options.dll
 C:\Users\mdj_p\Documents\SleepDeprivedBot\bin\Debug\net8.0\Microsoft.Extensions.Options.ConfigurationExtensions.dll
 C:\Users\mdj_p\Documents\SleepDeprivedBot\bin\Debug\net8.0\Microsoft.Extensions.Primitives.dll
+C:\Users\mdj_p\Documents\SleepDeprivedBot\obj\Debug\net8.0\SleepDeprivedBot.sourcelink.json
