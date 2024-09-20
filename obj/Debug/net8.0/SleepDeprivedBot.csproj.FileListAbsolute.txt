@@ -19,7 +19,6 @@ C:\Users\mdj_p\Documents\SleepDeprivedBot\obj\Debug\net8.0\SleepDeprivedBot.Gene
 C:\Users\mdj_p\Documents\SleepDeprivedBot\obj\Debug\net8.0\SleepDeprivedBot.AssemblyInfoInputs.cache
 C:\Users\mdj_p\Documents\SleepDeprivedBot\obj\Debug\net8.0\SleepDeprivedBot.AssemblyInfo.cs
 C:\Users\mdj_p\Documents\SleepDeprivedBot\obj\Debug\net8.0\SleepDeprivedBot.csproj.CoreCompileInputs.cache
-C:\Users\mdj_p\Documents\SleepDeprivedBot\obj\Debug\net8.0\SleepDeprivedBot.csproj.CopyComplete
 C:\Users\mdj_p\Documents\SleepDeprivedBot\obj\Debug\net8.0\SleepDeprivedBot.dll
 C:\Users\mdj_p\Documents\SleepDeprivedBot\obj\Debug\net8.0\refint\SleepDeprivedBot.dll
 C:\Users\mdj_p\Documents\SleepDeprivedBot\obj\Debug\net8.0\SleepDeprivedBot.pdb
@@ -43,3 +42,4 @@ C:\Users\mdj_p\Documents\SleepDeprivedBot\bin\Debug\net8.0\Microsoft.Extensions.
 C:\Users\mdj_p\Documents\SleepDeprivedBot\bin\Debug\net8.0\Microsoft.Extensions.Options.ConfigurationExtensions.dll
 C:\Users\mdj_p\Documents\SleepDeprivedBot\bin\Debug\net8.0\Microsoft.Extensions.Primitives.dll
 C:\Users\mdj_p\Documents\SleepDeprivedBot\obj\Debug\net8.0\SleepDeprivedBot.sourcelink.json
+C:\Users\mdj_p\Documents\SleepDeprivedBot\obj\Debug\net8.0\SleepDep.DA6F13C5.Up2Date

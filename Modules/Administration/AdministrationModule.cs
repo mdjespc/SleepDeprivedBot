@@ -43,7 +43,6 @@ namespace DiscordBot.Modules.Administration
         [RequireUserPermission(GuildPermission.KickMembers, Group = "Permission")]
         [RequireOwner(Group = "Permission")]
         public async Task SendMessageAsync(IChannel targetChannel, [Remainder] string textMessage){
-            _logger.LogInformation($"sm command called by {Context.User.Id} in {Context.Channel.Id} - targetChannel: {targetChannel.Id}, textMessage: {textMessage}");
             ITextChannel textChannel;
 
             try{
@@ -75,8 +74,6 @@ namespace DiscordBot.Modules.Administration
         [RequireUserPermission(GuildPermission.KickMembers, Group = "Permission")]
         [RequireOwner(Group = "Permission")]
         public async Task SendEmbedAsync(IChannel targetChannel, [Remainder] string remainder){
-            _logger.LogInformation($"se command called by {Context.User.Id} in {Context.Channel.Id} - targetChannel: {targetChannel.Id}");
-
             ITextChannel textChannel;
 
             try{

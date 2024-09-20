@@ -54,8 +54,11 @@ namespace DiscordBot{
             await _commands.AddModulesAsync(assembly: Assembly.GetExecutingAssembly(), 
                                             services: _serviceProvider);
             
-            // Hook the MessageReceived event into the command handler
+            // Hook the MessageReceived event handler
             _client.MessageReceived += HandleCommandAsync;
+            //Hook the OnCommandExecuted event handler
+            _commands.CommandExecuted += OnCommandExecutedAsync;
+
             _logger.LogInformation("Command modules loaded.");
         }
         
@@ -66,6 +69,7 @@ namespace DiscordBot{
 
         
         
+        //Logs messages and executes the command if the message is a text-based command.
         private async Task HandleCommandAsync(SocketMessage messageParam){
             //Ignore system messages and messages from bots
             var message = messageParam as SocketUserMessage;
@@ -81,16 +85,31 @@ namespace DiscordBot{
             int argPos = 0;
             char commandPrefix = '!';
             bool messageIsCommand = message.HasCharPrefix(commandPrefix, ref argPos);
-            if (!messageIsCommand) return;
 
-            // Execute the command with the command context we created if it exists in the ServiceCollection.
+            if (!messageIsCommand)
+                return;
+
             await _commands.ExecuteAsync(
                 context: context, 
                 argPos: argPos,
                 services: _serviceProvider);
         }
-        
+
+        private async Task OnCommandExecutedAsync(Optional<CommandInfo> command, ICommandContext context, IResult result){
+            var commandName = command.IsSpecified ? command.Value.Name : "A command";
+
+            //Reply with an error message from the execution attempt if there is one
+            if (!string.IsNullOrEmpty(result?.ErrorReason))
+            {
+                _logger.LogError(
+                    $"Command Execution Error: {commandName} was executed at {DateTime.Now.ToShortTimeString()} by {context.User.Username} in {context.Guild.Name} #{context.Channel.Name}" +
+                    $"\n\tError Reason: {result.ErrorReason}");
+                await context.Channel.SendMessageAsync(result.ErrorReason + " Type !help to view a list of commands with their respective usages.");
+            }
+
+            _logger.LogInformation($"Command Execution: {commandName} was executed at {DateTime.Now.ToShortTimeString()} by {context.User.Username} in {context.Guild.Name} #{context.Channel.Name}");
+            
+        }
+
     }
-
-
 }
