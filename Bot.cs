@@ -5,6 +5,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
 using Discord;
+using Discord.Interactions;
 using Discord.Commands;
 using Discord.WebSocket;
 using System.ComponentModel;
@@ -18,7 +19,9 @@ namespace DiscordBot{
         private readonly IConfiguration _config;
         private readonly ILogger _logger;
         private readonly DiscordSocketClient _client;
+        private readonly InteractionService _interactionService;
         private readonly CommandService _commands;
+
 
         /*
         The ILogger<Bot> and IConfiguration objects are provided by the DI container when the Bot class is instantiated through dependency injection.
@@ -35,7 +38,13 @@ namespace DiscordBot{
                 GatewayIntents = GatewayIntents.AllUnprivileged | GatewayIntents.MessageContent
             };
             _client = new DiscordSocketClient(clientConfiguration);
-            // Retrieve CommandService instance via ctor
+
+
+            //Initialize an interaction handler that will execute slash commmands
+            var interactionServiceConfiguration = new InteractionServiceConfig();
+            _interactionService = new InteractionService(_client, interactionServiceConfiguration);
+
+            // Retrieve CommandService for text-based commands instance via ctor
             _commands = new CommandService();
         }
 
@@ -46,20 +55,35 @@ namespace DiscordBot{
 
             _logger.LogInformation($"Initializing with token {apiToken}");
 
+            //Process when the client is ready to register slash commands
+            _client.Ready += ReadyAsync;
+            _interactionService.Log += LogAsync;
+
+            
             await _client.LoginAsync(TokenType.Bot, apiToken);
             await _client.StartAsync();
             _logger.LogInformation("Connected");
 
-            //Discover all of the command modules in the entry assembly and load them.     
+            //Discover all of the slash command modules in the entry assembly and load them. 
+            await _interactionService.AddModulesAsync(assembly: Assembly.GetExecutingAssembly(),
+                                                      services: _serviceProvider);
+
+            //Discover all of the text command modules in the entry assembly and load them.     
             await _commands.AddModulesAsync(assembly: Assembly.GetExecutingAssembly(), 
                                             services: _serviceProvider);
             
-            // Hook the MessageReceived event handler
+
+            //Hook the InteractionCreated and InteractionExecuted event handlers for slash commands
+            _client.InteractionCreated += OnInteractionCreatedAsync;
+            _interactionService.InteractionExecuted += OnInteractionExecuted;
+            _logger.LogInformation("Slash command modules loaded.");
+
+
+            // Hook the MessageReceived event handler and the OnCommandExecuted event handler for text commands
             _client.MessageReceived += HandleCommandAsync;
-            //Hook the OnCommandExecuted event handler
             _commands.CommandExecuted += OnCommandExecutedAsync;
 
-            _logger.LogInformation("Command modules loaded.");
+            _logger.LogInformation("Text command modules loaded.");
         }
         
         public async Task StopAsync(){
@@ -67,8 +91,64 @@ namespace DiscordBot{
             await _client.StopAsync();
         }
 
+        //Registers slash commands globally.
+        private async Task ReadyAsync(){
+            await _interactionService.RegisterCommandsGloballyAsync();
+        }
+
+        private Task LogAsync(LogMessage log){
+            _logger.LogInformation(log.ToString());
+            return Task.CompletedTask;
+        }
         
+        private async Task OnInteractionCreatedAsync(SocketInteraction interaction){
+            try
+        {
+            // Create an execution context that matches the generic type parameter of your InteractionModuleBase<T> modules.
+            var context = new SocketInteractionContext(_client, interaction);
+
+            // Execute the incoming command.
+            var result = await _interactionService.ExecuteCommandAsync(context, _serviceProvider);
+
+            // Due to async nature of InteractionFramework, the result here may always be success.
+            // That's why we also need to handle the InteractionExecuted event.
+            if (!result.IsSuccess)
+                switch (result.Error)
+                {
+                    case InteractionCommandError.UnmetPrecondition:
+                        // implement
+                        break;
+                    default:
+                        break;
+                }
+        }
+        catch
+        {
+            // If Slash Command execution fails it is most likely that the original interaction acknowledgement will persist. It is a good idea to delete the original
+            // response, or at least let the user know that something went wrong during the command execution.
+            if (interaction.Type is InteractionType.ApplicationCommand)
+                await interaction.GetOriginalResponseAsync().ContinueWith(async (msg) => await msg.Result.DeleteAsync());
+        }
+        }
+
+        private Task OnInteractionExecuted(ICommandInfo commandInfo, IInteractionContext context, Discord.Interactions.IResult result){
+            if (!result.IsSuccess)
+            switch (result.Error)
+            {
+                case InteractionCommandError.UnmetPrecondition:
+                    // implement
+                    break;
+                default:
+                    break;
+            }
+
+            return Task.CompletedTask;
+    }
         
+
+
+
+
         //Logs messages and executes the command if the message is a text-based command.
         private async Task HandleCommandAsync(SocketMessage messageParam){
             //Ignore system messages and messages from bots
@@ -95,7 +175,7 @@ namespace DiscordBot{
                 services: _serviceProvider);
         }
 
-        private async Task OnCommandExecutedAsync(Optional<CommandInfo> command, ICommandContext context, IResult result){
+        private async Task OnCommandExecutedAsync(Optional<CommandInfo> command, ICommandContext context, Discord.Commands.IResult result){
             var commandName = command.IsSpecified ? command.Value.Name : "A command";
 
             //Reply with an error message from the execution attempt if there is one
