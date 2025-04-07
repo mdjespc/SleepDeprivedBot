@@ -1,5 +1,6 @@
 ﻿/*
-Github reference: https://github.com/adamstirtan/DiscordBotTutorial/blob/master/Part%202/DiscordBot/DiscordBot/Program.cs
+Github: https://github.com/mdjespc/DiscordBot
+Disccord.net Github reference: https://github.com/discord-net/Discord.Net/tree/dev
 Discord.net documentation reference: https://discordnet.dev/guides/introduction/intro.html
 */
 

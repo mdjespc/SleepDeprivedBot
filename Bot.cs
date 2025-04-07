@@ -159,7 +159,7 @@ namespace DiscordBot{
             var context = new SocketCommandContext(_client, message);
 
             // Log the received message
-            _logger.LogInformation($"{DateTime.Now.ToShortTimeString()} - {message.Author} in {context.Guild.Name}: {message.Content}");
+            _logger.LogInformation($"{DateTime.Now.ToShortTimeString()} - {message.Author} in {context.Guild.Name} #{context.Channel.Name}: {message.Content}");
 
             // Determine if the message is a command based on the prefix and make sure no bots trigger commands
             int argPos = 0;
