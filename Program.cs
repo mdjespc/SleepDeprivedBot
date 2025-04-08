@@ -6,6 +6,7 @@ Discord.net documentation reference: https://discordnet.dev/guides/introduction/
 
 using System.Reflection;
 using Discord.Rest;
+using DiscordBot.Services;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -44,11 +45,15 @@ namespace DiscordBot
                             })
                             .AddSingleton<IConfiguration>(config)
                             .AddSingleton<ILogger<Bot>, Logger<Bot>>()
+                            .AddSingleton<IMongoDbService, MongoDbService>()
                             .AddScoped<IBot, Bot>()
                             .BuildServiceProvider();
 
             try
             {
+                //Resolve MongoDB database service instance to inject
+                IMongoDbService _mongoDbService = services.GetRequiredService<IMongoDbService>();
+
                 /*
                 Resolve an instance of IBot from the DI container.
                 The DI container automatically injects the required dependencies (ILogger<Bot> and IConfiguration) into the Bot class when creating the instance.
