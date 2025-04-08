@@ -1,0 +1,13 @@
+{
+    "announce_info":"**announce** <channel> <message> - Sends an announcement.",
+    "bitrate_info":"**bitrate** <channel> - Returns the bitrate of a voice channel.",
+    "ping_info":"**ping** - Pings the bot and returns its latency.",
+    "sm_info":"**sm** <channel> <message> - Sends a message.",
+    "se_info":"**se** <channel> <embed> - Sends an embedded message.",
+    "echo_info":"**echo** <phrase> - Echoes a message.",
+    "help_info":"**help** - Lists all commands.",
+    "kalek_info":"**kalek** - Praises Kalek.",
+    "ping_command":"The current latency is {0}ms. That's how long it took me to respond to you! :ping_pong:",
+    "bitrate_command":"{0} has a bitrate of {1} bits per second."
+
+}

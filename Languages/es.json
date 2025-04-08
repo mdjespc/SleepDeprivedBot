@@ -1,0 +1,12 @@
+{    
+    "announce_info":"**announce** <channel> <message> - Envía un anuncio.",
+    "bitrate_info":"**bitrate** <channel> - Devuelve la tasa de bits de un canal de voz.",
+    "ping_info":"**ping** - Envía una señal al bot y calcula su latencia.",
+    "sm_info":"**sm** <channel> <message> - Envía un mensaje.",
+    "se_info":"**se** <channel> <embed> - Envía un mensaje incrustado.",
+    "echo_info":"**echo** <phrase> - Repite un mensaje.",
+    "help_info":"**help** - Muestra todos los comandos.",
+    "kalek_info":"**kalek** - Halaga a Kalek.",
+    "ping_command":"La latencia actual es de {0}ms. ¡Es la cantidad de tiempo que me tomó responderte! :ping_pong:",
+    "bitrate_command":"{0} tiene una tasa de {1} bits por segundo."
+}

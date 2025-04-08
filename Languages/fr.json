@@ -1,0 +1,12 @@
+{    
+    "announce_info":"**announce** <channel> <message> - Envoyer une annonce.",
+    "bitrate_info":"**bitrate** <channel> - Montrer le débit binaire d'un canal vocal.",
+    "ping_info":"**ping** - Envoyer un signal au bot et montrer sa latence.",
+    "sm_info":"**sm** <channel> <message> - Envoyer un message.",
+    "se_info":"**se** <channel> <embed> - Envoyer un message intégré.",
+    "echo_info":"**echo** <phrase> - Répéter un message.",
+    "help_info":"**help** - Montrer toutes les commandes.",
+    "kalek_info":"**kalek** - Flatter Kalek.",
+    "ping_command":"La latence actuelle est de {0}ms. C'est le temps qu'il m'a fallu pour te répondre! :ping_pong:",
+    "bitrate_command":"{0} a un débit binaire de {1} bits par seconde."
+}
