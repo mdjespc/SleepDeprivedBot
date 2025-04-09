@@ -1,6 +1,7 @@
 using System.Drawing;
 using Discord;
 using Discord.Commands;
+using DiscordBot.Services;
 using Microsoft.Extensions.Logging;
 
 
@@ -8,7 +9,7 @@ namespace DiscordBot.Modules.TextCommands;
 
 public class AdminTextModule : TextCommandModule
 {
-    public AdminTextModule(ILogger<Bot> logger) : base(logger)
+    public AdminTextModule(IMongoDbService db, ILanguageManager langManager, ILogger<Bot> logger) : base(db, langManager, logger)
     {
     }
     

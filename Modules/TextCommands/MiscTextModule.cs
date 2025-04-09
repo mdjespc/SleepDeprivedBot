@@ -1,4 +1,5 @@
 using Discord.Commands;
+using DiscordBot.Services;
 using Microsoft.Extensions.Logging;
 
 
@@ -8,7 +9,7 @@ namespace DiscordBot.Modules.TextCommands;
     
 public class MiscTextModule : TextCommandModule
 {
-    public MiscTextModule(ILogger<Bot> logger) : base(logger)
+    public MiscTextModule(IMongoDbService db, ILanguageManager langManager, ILogger<Bot> logger) : base(db, langManager, logger)
     {
     }
     

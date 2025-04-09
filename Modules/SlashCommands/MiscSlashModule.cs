@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 namespace DiscordBot.Modules.SlashCommands;
 
 public class MiscSlashModule : SlashCommandModule{
-    public MiscSlashModule(IMongoDbService db, ILogger<Bot> logger) : base(db, logger){}
+    public MiscSlashModule(IMongoDbService db, ILanguageManager langManager, ILogger<Bot> logger) : base(db, langManager, logger){}
 
 
     [SlashCommand("echo", "Repeat the input")]
@@ -18,13 +18,14 @@ public class MiscSlashModule : SlashCommandModule{
     
     [SlashCommand("ping", "Pings the bot and returns its latency")]
     public async Task PingCommandAsync([Summary(description: "Visible only to you")] bool ephemeral = false)
-        => await RespondAsync(text: $"The current latency is {Context.Client.Latency}ms. That's how long it took me to respond to you! :ping_pong:", ephemeral: ephemeral);
+        => await RespondAsync(text: _langManager.GetString("ping_command", _db.GetGuildSettingsAsync(Context.Guild.Id).Result.Language, Context.Client.Latency), ephemeral: ephemeral);
 
     [SlashCommand("bitrate", "Returns the bitrate of a voice channel")]
     public async Task BitrateCommandAsync([ChannelTypes(ChannelType.Voice, ChannelType.Stage)] IVoiceChannel channel, [Summary(description: "Visible only to you")] bool ephemeral = false)
     {
         channel = channel ?? throw new ArgumentNullException("<channel> must be a voice channel.");
-        await RespondAsync(text: $"{channel.Name} has a bitrate of {channel.Bitrate} bits per second.", ephemeral: ephemeral);
+        //await RespondAsync(text: $"{channel.Name} has a bitrate of {channel.Bitrate} bits per second.", ephemeral: ephemeral);
+        await RespondAsync(text: _langManager.GetString("bitrate_command", _db.GetGuildSettingsAsync(Context.Guild.Id).Result.Language, channel.Name, channel.Bitrate), ephemeral: ephemeral);
     }
 
     [SlashCommand("help", "Lists all commands")]

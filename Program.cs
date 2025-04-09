@@ -46,14 +46,15 @@ namespace DiscordBot
                             .AddSingleton<IConfiguration>(config)
                             .AddSingleton<ILogger<Bot>, Logger<Bot>>()
                             .AddSingleton<IMongoDbService, MongoDbService>()
+                            .AddSingleton<ILanguageManager, LanguageManager>()
                             .AddScoped<IBot, Bot>()
                             .BuildServiceProvider();
 
             try
             {
-                //Resolve MongoDB database service instance to inject
+                //Resolve MongoDB database and Language managing services as instances to inject
                 IMongoDbService _mongoDbService = services.GetRequiredService<IMongoDbService>();
-
+                ILanguageManager _langManager = services.GetRequiredService<ILanguageManager>();
                 /*
                 Resolve an instance of IBot from the DI container.
                 The DI container automatically injects the required dependencies (ILogger<Bot> and IConfiguration) into the Bot class when creating the instance.
