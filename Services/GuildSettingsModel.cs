@@ -14,7 +14,7 @@ public class GuildSettingsModel
     public string Prefix { get; set; } = "!";
 
     [BsonElement("language")]
-    public string? Language { get; set; }
+    public string Language { get; set; } = "en";
 
     [BsonElement("welcomeChannel")]
     public string? welcomeChannel { get; set;}
