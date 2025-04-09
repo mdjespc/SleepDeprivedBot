@@ -30,16 +30,22 @@ public class MiscSlashModule : SlashCommandModule{
 
     [SlashCommand("help", "Lists all commands")]
     public async Task HelpCommandAsync(){
-        string file = "Modules\\help.txt";
-        string? helpMessage = null;
-        try{
-            helpMessage = File.ReadAllText(file);
-        }catch(FileNotFoundException exception)
-        {
-            _logger.LogError(exception, $"File not found: {exception.FileName}");
-        }
-        helpMessage ??= "Unable to retrieve help list.";
-        await ReplyAsync(helpMessage);
+        var settings = await _db.GetGuildSettingsAsync(Context.Guild.Id);
+        var lang = settings.Language;
+        string[] infoStringKeys = {
+        "announce_info",
+        "bitrate_info",
+        "ping_info",
+        "sm_info",
+        "se_info",
+        "echo_info",
+        "help_info",
+        };
+
+        var infoStringValues = infoStringKeys.Select(_ => _langManager.GetString(_, lang));
+        var helpMessage = string.Join("\n", infoStringValues);
+        
+        await RespondAsync(helpMessage);
     }
 
 
