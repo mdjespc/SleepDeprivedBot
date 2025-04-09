@@ -22,6 +22,21 @@ namespace DiscordBot.Services{
             Console.WriteLine("Database connection successful.");
         }
 
+        //Instance fields of Collection type
+        public IMongoCollection<GuildSettingsModel> Guilds => _database.GetCollection<GuildSettingsModel>("guilds");
 
+        //Check guild settings — or initialize them if non-existent 
+        public async Task<GuildSettingsModel> GetGuildSettingsAsync(ulong guildId){
+            var settings = await Guilds.Find(_ => _.GuildId == guildId).FirstOrDefaultAsync();
+
+            if (settings == null){
+                settings = new GuildSettingsModel{GuildId = guildId};
+                await Guilds.InsertOneAsync(settings);
+
+                Console.WriteLine($"Guild Settings for Guild {guildId} were not found in the database. A new document for this guild has been added.");
+            }
+
+            return settings;
+        }
     }
 }

@@ -1,5 +1,6 @@
 using Discord;
 using Discord.Interactions;
+using DiscordBot.Services;
 using Microsoft.Extensions.Logging;
 //using DiscordBot.Attributes;
 using System;
@@ -8,7 +9,7 @@ using System.Threading.Tasks;
 namespace DiscordBot.Modules.SlashCommands;
 
 public class MiscSlashModule : SlashCommandModule{
-    public MiscSlashModule(ILogger<Bot> logger) : base(logger){}
+    public MiscSlashModule(IMongoDbService db, ILogger<Bot> logger) : base(db, logger){}
 
 
     [SlashCommand("echo", "Repeat the input")]

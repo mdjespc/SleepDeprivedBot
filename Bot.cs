@@ -10,6 +10,7 @@ using Discord.Commands;
 using Discord.WebSocket;
 using System.ComponentModel;
 using System.Threading.Channels;
+using DiscordBot.Services;
 
 
 namespace DiscordBot{
@@ -17,6 +18,7 @@ namespace DiscordBot{
         private ServiceProvider? _serviceProvider;
         
         private readonly IConfiguration _config;
+        private readonly IMongoDbService _db;
         private readonly ILogger _logger;
         private readonly DiscordSocketClient _client;
         private readonly InteractionService _interactionService;
@@ -27,10 +29,12 @@ namespace DiscordBot{
         The ILogger<Bot> and IConfiguration objects are provided by the DI container when the Bot class is instantiated through dependency injection.
         The DI container takes care of resolving and injecting these dependencies into the Bot class constructor.
         */
-        public Bot(ILogger<Bot> logger,
-                IConfiguration config)
+        public Bot(IConfiguration config,
+                IMongoDbService db,
+                ILogger<Bot> logger)
         {
             _config = config;
+            _db = db;
             _logger = logger;
 
             //Initialize a DiscordSocketClient object that maintains communication between the bot and a server with the specified configuration.
@@ -106,17 +110,17 @@ namespace DiscordBot{
         {
             // Create an execution context that matches the generic type parameter of your InteractionModuleBase<T> modules.
             var context = new SocketInteractionContext(_client, interaction);
-
+            
             // Execute the incoming command.
             var result = await _interactionService.ExecuteCommandAsync(context, _serviceProvider);
 
-            // Due to async nature of InteractionFramework, the result here may always be success.
+            // Due to async nature of InteractionFramework, the result here may not always be success.
             // That's why we also need to handle the InteractionExecuted event.
             if (!result.IsSuccess)
                 switch (result.Error)
                 {
                     case InteractionCommandError.UnmetPrecondition:
-                        // implement
+                        //TODO
                         break;
                     default:
                         break;
@@ -175,6 +179,7 @@ namespace DiscordBot{
                 services: _serviceProvider);
         }
 
+        #pragma warning disable CS1998
         private async Task OnCommandExecutedAsync(Optional<CommandInfo> command, ICommandContext context, Discord.Commands.IResult result){
             var commandName = command.IsSpecified ? command.Value.Name : "A command";
 
@@ -184,7 +189,8 @@ namespace DiscordBot{
                 _logger.LogError(
                     $"Command Execution Error: {commandName} was executed at {DateTime.Now.ToShortTimeString()} by {context.User.Username} in {context.Guild.Name} #{context.Channel.Name}" +
                     $"\n\tError Reason: {result.ErrorReason}");
-                await context.Channel.SendMessageAsync(result.ErrorReason + " Type !help to view a list of commands with their respective usages.");
+                //TODO Uncomment the line below after customizable prefixes have been implemented
+                //await context.Channel.SendMessageAsync(result.ErrorReason + " Type !help to view a list of commands with their respective usages.");
             }
 
             _logger.LogInformation($"Command Execution: {commandName} was executed at {DateTime.Now.ToShortTimeString()} by {context.User.Username} in {context.Guild.Name} #{context.Channel.Name}");
