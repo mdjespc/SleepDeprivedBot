@@ -17,4 +17,14 @@ public class SlashCommandModule : InteractionModuleBase<SocketInteractionContext
         _logger = logger;
     }
 
+    public enum EmbedColor
+    {
+        Default,
+        Blue,
+        Red,
+        Green,
+        Orange,
+        Gold
+    }
+
 }
