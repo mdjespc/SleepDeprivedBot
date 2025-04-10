@@ -121,8 +121,10 @@ namespace DiscordBot{
                 {
                     case InteractionCommandError.UnmetPrecondition:
                         //TODO
+                        _logger.LogError($"Command Execution Error: {interaction} was executed at {DateTime.Now.ToShortTimeString()} by {context.User.Username} in {context.Guild.Name} in #{context.Channel.Name}\nError:{result.Error}");
                         break;
                     default:
+                        _logger.LogError($"Command Execution Error: {interaction} was executed at {DateTime.Now.ToShortTimeString()} by {context.User.Username} in {context.Guild.Name} in #{context.Channel.Name}\nError:{result.Error}");
                         break;
                 }
         }
@@ -137,22 +139,19 @@ namespace DiscordBot{
 
         private Task OnInteractionExecuted(ICommandInfo commandInfo, IInteractionContext context, Discord.Interactions.IResult result){
             if (!result.IsSuccess)
-            switch (result.Error)
-            {
-                case InteractionCommandError.UnmetPrecondition:
-                    // implement
-                    break;
-                default:
-                    break;
-            }
+                switch (result.Error)
+                {
+                    case InteractionCommandError.UnmetPrecondition:
+                        _logger.LogError($"Command Execution Error: {commandInfo.Name} was executed at {DateTime.Now.ToShortTimeString()} by {context.User.Username} in {context.Guild.Name} #{context.Channel.Name}\nError:{result.Error}");
+                        break;
+                    default:
+                        break;
+                }
 
+            _logger.LogInformation($"Command Execution: {commandInfo.Name} was executed at {DateTime.Now.ToShortTimeString()} by {context.User.Username}#{context.User.Discriminator} in {context.Guild.Name} in #{context.Channel.Name}");
             return Task.CompletedTask;
     }
         
-
-
-
-
         //Logs messages and executes the command if the message is a text-based command.
         private async Task HandleCommandAsync(SocketMessage messageParam){
             //Ignore system messages and messages from bots
