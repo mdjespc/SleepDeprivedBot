@@ -1,5 +1,6 @@
 using Discord;
 using Discord.Interactions;
+using DiscordBot.Attributes;
 using DiscordBot.Services;
 using Microsoft.Extensions.Logging;
 //using DiscordBot.Attributes;
@@ -76,4 +77,61 @@ public class AdminSlashModule : SlashCommandModule{
         await textChannel.SendMessageAsync(message);
         await RespondAsync("Message sent! :white_check_mark:", ephemeral:true);
     }
+
+    [SlashCommand("setup", "Start configuring the bot settings")]
+    public async Task SetupCommandAsync(){
+        string desc = @"Please select a language for this server.
+        
+        Por favor seleccionar un idioma para este servidor.
+        
+        Veuillez choisir une langue pour ce serveur.";
+
+        var embed = new EmbedBuilder()
+            .WithTitle("SleepDeprivedBot Setup")
+            .WithDescription(desc)
+            .WithColor(Discord.Color.Blue)
+            .Build();
+
+        var buttons = new ComponentBuilder()
+            .WithButton("English", "setup_lang_en", ButtonStyle.Primary, new Emoji("🇬🇧"))
+            .WithButton("Español", "setup_lang_es", ButtonStyle.Primary, new Emoji("🇪🇸"))
+            .WithButton("Français", "setup_lang_fr", ButtonStyle.Primary, new Emoji("🇫🇷"))
+            .WithButton("Finish Setup", "setup_finish", ButtonStyle.Success, new Emoji("✅"), row: 1);;
+
+        await RespondAsync(embed: embed, components: buttons.Build());
+    }
+
+    //[DoUserCheck]
+    [ComponentInteraction("setup_lang_en")]
+    public async Task SetupLangEnAsync(){
+        await DeferAsync(); //Acknowledge the interaction
+        await _db.SetGuildSettingsAsync(Context.Guild.Id, "language", "en");
+        await FollowupAsync("Your preferred language has been set to English✅", ephemeral: true);
+    }
+
+    //[DoUserCheck]
+    [ComponentInteraction("setup_lang_es")]
+    public async Task SetupLangEsAsync(){
+        await DeferAsync();
+        await _db.SetGuildSettingsAsync(Context.Guild.Id, "language", "es");
+        await FollowupAsync("Su idioma preferido se ha establecido en Español✅", ephemeral: true);
+    }
+
+    //[DoUserCheck]
+    [ComponentInteraction("setup_lang_fr")]
+    public async Task SetupLangFrAsync(){
+        await DeferAsync();
+        await _db.SetGuildSettingsAsync(Context.Guild.Id, "language", "fr");
+        await FollowupAsync("Votre langue préférée a été définie sur le Français✅", ephemeral: true);
+    }
+
+    //[DoUserCheck]
+    [ComponentInteraction("setup_finish")]
+    public async Task FinishSetupAsync()
+    {
+        await DeferAsync();
+        await FollowupAsync(_langManager.GetString("setup_followup", _db.GetGuildSettingsAsync(Context.Guild.Id).Result.Language), ephemeral: false);
+    }
+
+
 }

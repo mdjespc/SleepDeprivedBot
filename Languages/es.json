@@ -8,5 +8,6 @@
     "help_info":"**help** - Muestra todos los comandos.",
     "kalek_info":"**kalek** - Halaga a Kalek.",
     "ping_command":"La latencia actual es de {0}ms. ¡Es la cantidad de tiempo que me tomó responderte! :ping_pong:",
-    "bitrate_command":"{0} tiene una tasa de {1} bits por segundo."
+    "bitrate_command":"{0} tiene una tasa de {1} bits por segundo.",
+    "setup_followup": "✅ Configuración completa! Puede cambiar los ajustes en cualquier momento usando `/setup`."
 }
