@@ -7,8 +7,10 @@ using Microsoft.Extensions.Logging;
 using System;
 using System.ComponentModel;
 using System.Drawing;
+using System.Net.Mime;
 using System.Reflection;
 using System.Runtime.InteropServices;
+using System.Threading.Channels;
 using System.Threading.Tasks;
 
 namespace DiscordBot.Modules.SlashCommands;
@@ -106,7 +108,28 @@ public class AdminSlashModule : SlashCommandModule{
 
         await member.SendMessageAsync("", embed:warning);
         await RespondAsync("User has been warned. You can view all active warnings by using /warnings.", ephemeral:true);
-        //TODO here we log the warning action in a modlog channel, if one is set up.
+
+        //Log the warning action in a modlog channel, if one is set up.
+        var modlogChannelId = _db.GetGuildSettingsAsync(Context.Guild.Id).Result.Modlog;
+        if (string.IsNullOrWhiteSpace(modlogChannelId))
+            return;
+        //ChannelID is passed as a string so we need to convert it to ulong type
+        var modlogChannel = Context.Guild.GetChannel(ulong.Parse(modlogChannelId)) as IMessageChannel;
+        if (modlogChannel == null)
+            return;
+
+        title = "Moderation Action";
+        description = $"**Action Type:** Warning\n\n**Issued by:** {Context.User}#{Context.User.Discriminator}\n\n**Issued to**: {member}#{member.Discriminator}\n\n**Reason:**\n{reason}";
+        color = Discord.Color.Default;
+        var modlog = new EmbedBuilder(){
+            ThumbnailUrl = thumbnailUrl,
+            Title = title,
+            Description = description,
+            Color = color,
+        }.WithCurrentTimestamp()
+         .Build();
+
+        await modlogChannel.SendMessageAsync("", embed: modlog);
     }
 
     [SlashCommand("warnings", "View a list of all active warnings.")]
