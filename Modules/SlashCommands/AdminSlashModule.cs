@@ -2,16 +2,19 @@ using Discord;
 using Discord.Interactions;
 using DiscordBot.Attributes;
 using DiscordBot.Services;
+using InteractionFramework.Attributes;
 using Microsoft.Extensions.Logging;
-//using DiscordBot.Attributes;
 using System;
+using System.ComponentModel;
 using System.Drawing;
 using System.Reflection;
+using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 
 namespace DiscordBot.Modules.SlashCommands;
 
-[DefaultMemberPermissions(GuildPermission.Administrator | GuildPermission.KickMembers)]
+[RequireAdminOrOwner]
+//[DefaultMemberPermissions(GuildPermission.KickMembers)]
 public class AdminSlashModule : SlashCommandModule{
     public AdminSlashModule(IMongoDbService db, ILanguageManager langManager, ILogger<Bot> logger) : base(db, langManager, logger) {}
 
@@ -78,60 +81,36 @@ public class AdminSlashModule : SlashCommandModule{
         await RespondAsync("Message sent! :white_check_mark:", ephemeral:true);
     }
 
-    [SlashCommand("setup", "Start configuring the bot settings")]
-    public async Task SetupCommandAsync(){
-        string desc = @"Please select a language for this server.
-        
-        Por favor seleccionar un idioma para este servidor.
-        
-        Veuillez choisir une langue pour ce serveur.";
+    //Moderation tools
+    [SlashCommand("warn", "Send a warning to a member.")]
+    public async Task WarnCommandAsync(IUser member, string reason = "",
+    [Summary(description:"Channel to send the warning to. Leaving this blank will only send the warning to the member's DMs.")]ITextChannel? channel = null){
+        reason = string.IsNullOrWhiteSpace(reason) ? "No reason given." : reason;
 
-        var embed = new EmbedBuilder()
-            .WithTitle("SleepDeprivedBot Setup")
-            .WithDescription(desc)
-            .WithColor(Discord.Color.Blue)
-            .Build();
+        var thumbnailUrl = member.GetAvatarUrl();
+        string title = "Warning";
+        string description = $"You have received a warning from the {Context.Guild.Name} moderation team.\n\n**Reason:**\n{reason}\n\n\nYou now have N/A active warnings.";
+        var color = Discord.Color.Orange;
 
-        var buttons = new ComponentBuilder()
-            .WithButton("English", "setup_lang_en", ButtonStyle.Primary, new Emoji("🇬🇧"))
-            .WithButton("Español", "setup_lang_es", ButtonStyle.Primary, new Emoji("🇪🇸"))
-            .WithButton("Français", "setup_lang_fr", ButtonStyle.Primary, new Emoji("🇫🇷"))
-            .WithButton("Finish Setup", "setup_finish", ButtonStyle.Success, new Emoji("✅"), row: 1);;
+        EmbedBuilder embedBuilder = new EmbedBuilder(){
+            ThumbnailUrl = thumbnailUrl,
+            Title = title,
+            Description = description,
+            Color = color,
+        };
 
-        await RespondAsync(embed: embed, components: buttons.Build());
+        var warning = embedBuilder.Build();
+
+        if (channel != null)
+            await channel.SendMessageAsync(member.Mention, embed:warning);
+
+        await member.SendMessageAsync("", embed:warning);
+        await RespondAsync("User has been warned. You can view all active warnings by using /warnings.", ephemeral:true);
+        //TODO here we log the warning action in a modlog channel, if one is set up.
     }
 
-    //[DoUserCheck]
-    [ComponentInteraction("setup_lang_en")]
-    public async Task SetupLangEnAsync(){
-        await DeferAsync(); //Acknowledge the interaction
-        await _db.SetGuildSettingsAsync(Context.Guild.Id, "language", "en");
-        await FollowupAsync("Your preferred language has been set to English✅", ephemeral: true);
+    [SlashCommand("warnings", "View a list of all active warnings.")]
+    public async Task WarningsCommandAsync(){
+        await RespondAsync("Coming soon!");
     }
-
-    //[DoUserCheck]
-    [ComponentInteraction("setup_lang_es")]
-    public async Task SetupLangEsAsync(){
-        await DeferAsync();
-        await _db.SetGuildSettingsAsync(Context.Guild.Id, "language", "es");
-        await FollowupAsync("Su idioma preferido se ha establecido en Español✅", ephemeral: true);
-    }
-
-    //[DoUserCheck]
-    [ComponentInteraction("setup_lang_fr")]
-    public async Task SetupLangFrAsync(){
-        await DeferAsync();
-        await _db.SetGuildSettingsAsync(Context.Guild.Id, "language", "fr");
-        await FollowupAsync("Votre langue préférée a été définie sur le Français✅", ephemeral: true);
-    }
-
-    //[DoUserCheck]
-    [ComponentInteraction("setup_finish")]
-    public async Task FinishSetupAsync()
-    {
-        await DeferAsync();
-        await FollowupAsync(_langManager.GetString("setup_followup", _db.GetGuildSettingsAsync(Context.Guild.Id).Result.Language), ephemeral: false);
-    }
-
-
 }

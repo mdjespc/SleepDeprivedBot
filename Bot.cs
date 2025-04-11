@@ -76,12 +76,15 @@ namespace DiscordBot{
             await _commands.AddModulesAsync(assembly: Assembly.GetExecutingAssembly(), 
                                             services: _serviceProvider);
             
-
+            foreach (var module in _interactionService.Modules){
+                _logger.LogInformation($"{module.Name} loaded.");
+                foreach(var component in module.ComponentCommands)
+                    _logger.LogInformation($"{component.Name} component loaded.");
+            }
             //Hook the InteractionCreated and InteractionExecuted event handlers for slash commands
             _client.InteractionCreated += OnInteractionCreatedAsync;
             _interactionService.InteractionExecuted += OnInteractionExecuted;
             _logger.LogInformation("Slash command modules loaded.");
-
 
             // Hook the MessageReceived event handler and the OnCommandExecuted event handler for text commands
             _client.MessageReceived += HandleCommandAsync;
@@ -107,8 +110,8 @@ namespace DiscordBot{
         
         private async Task OnInteractionCreatedAsync(SocketInteraction interaction){
             try
-        {
-            // Create an execution context that matches the generic type parameter of your InteractionModuleBase<T> modules.
+            {
+            // Create an execution context that matches the generic type parameter of the InteractionModuleBase<T> modules.
             var context = new SocketInteractionContext(_client, interaction);
             
             // Execute the incoming command.
@@ -120,35 +123,38 @@ namespace DiscordBot{
                 switch (result.Error)
                 {
                     case InteractionCommandError.UnmetPrecondition:
-                        //TODO
                         _logger.LogError($"Command Execution Error: {interaction} was executed at {DateTime.Now.ToShortTimeString()} by {context.User.Username} in {context.Guild.Name} in #{context.Channel.Name}\nError:{result.Error}");
-                        break;
+                        throw new Exception(result.Error.ToString());
+                        
                     default:
                         _logger.LogError($"Command Execution Error: {interaction} was executed at {DateTime.Now.ToShortTimeString()} by {context.User.Username} in {context.Guild.Name} in #{context.Channel.Name}\nError:{result.Error}");
-                        break;
+                        throw new Exception(result.Error.ToString());
                 }
         }
-        catch
+        catch (Exception e)
         {
             // If Slash Command execution fails it is most likely that the original interaction acknowledgement will persist. It is a good idea to delete the original
             // response, or at least let the user know that something went wrong during the command execution.
+            _logger.LogError($"Interaction handling failed: {e.Message}\n{e.StackTrace}");
             if (interaction.Type is InteractionType.ApplicationCommand)
                 await interaction.GetOriginalResponseAsync().ContinueWith(async (msg) => await msg.Result.DeleteAsync());
         }
         }
 
         private Task OnInteractionExecuted(ICommandInfo commandInfo, IInteractionContext context, Discord.Interactions.IResult result){
+            string commandName = commandInfo?.Name ?? "Component/Unknown";
+
             if (!result.IsSuccess)
                 switch (result.Error)
                 {
                     case InteractionCommandError.UnmetPrecondition:
-                        _logger.LogError($"Command Execution Error: {commandInfo.Name} was executed at {DateTime.Now.ToShortTimeString()} by {context.User.Username} in {context.Guild.Name} #{context.Channel.Name}\nError:{result.Error}");
+                        _logger.LogError($"Command Execution Error: {commandName} was executed at {DateTime.Now.ToShortTimeString()} by {context.User.Username} in {context.Guild.Name} #{context.Channel.Name}\nError:{result.Error}");
                         break;
                     default:
                         break;
                 }
 
-            _logger.LogInformation($"Command Execution: {commandInfo.Name} was executed at {DateTime.Now.ToShortTimeString()} by {context.User.Username}#{context.User.Discriminator} in {context.Guild.Name} in #{context.Channel.Name}");
+            _logger.LogInformation($"Command Execution: {commandName} was executed at {DateTime.Now.ToShortTimeString()} by {context.User.Username}#{context.User.Discriminator} in {context.Guild.Name} in #{context.Channel.Name}");
             return Task.CompletedTask;
     }
         

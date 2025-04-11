@@ -17,5 +17,11 @@ public class GuildSettingsModel
     public string Language { get; set; } = "en";
 
     [BsonElement("welcomeChannel")]
-    public string? welcomeChannel { get; set;}
+    public string? WelcomeChannel { get; set;}
+
+    [BsonElement("welcomeMessage")]
+    public string? WelcomeMessage { get; set;}
+
+    [BsonElement("modlog")]
+    public string? Modlog { get; set;}
 }

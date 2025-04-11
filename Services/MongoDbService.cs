@@ -32,7 +32,9 @@ namespace DiscordBot.Services{
             {
                 "language" => Builders<GuildSettingsModel>.Update.Set(_ => _.Language, value),
                 "prefix" => Builders<GuildSettingsModel>.Update.Set(_ => _.Prefix, value),
-                "welcomeChannel" => Builders<GuildSettingsModel>.Update.Set(_ => _.welcomeChannel, value),
+                "welcomeChannel" => Builders<GuildSettingsModel>.Update.Set(_ => _.WelcomeChannel, value),
+                "welcomeMessage" => Builders<GuildSettingsModel>.Update.Set(_ => _.WelcomeMessage, value),
+                "modlog" => Builders<GuildSettingsModel>.Update.Set(_ => _.Modlog, value),
                 _ => throw new ArgumentException($"Unknown setting key: {key}")
             };
 
