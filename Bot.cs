@@ -86,11 +86,34 @@ namespace DiscordBot{
             _interactionService.InteractionExecuted += OnInteractionExecuted;
             _logger.LogInformation("Slash command modules loaded.");
 
-            // Hook the MessageReceived event handler and the OnCommandExecuted event handler for text commands
+            //Hook the MessageReceived event handler and the OnCommandExecuted event handler for text commands
             _client.MessageReceived += HandleCommandAsync;
             _commands.CommandExecuted += OnCommandExecutedAsync;
-
             _logger.LogInformation("Text command modules loaded.");
+
+            //Hook modlog event notification handlers
+            //Message Events
+            _client.MessageUpdated += OnMessageUpdatedAsync;
+            _client.MessageDeleted += OnMessageDeletedAsync;
+
+            //Role Events
+            _client.RoleCreated += OnRoleCreatedAsync;
+            _client.RoleUpdated += OnRoleUpdatedAsync;
+            _client.RoleDeleted += OnRoleDeletedAsync;
+
+            //User Events
+            _client.UserJoined += OnUserJoinedAsync;
+            _client.UserUpdated += OnUserUpdatedAsync;
+            _client.UserLeft += OnUserLeftAsync;
+            _client.UserBanned += OnUserBannedAsync;
+            _client.UserUnbanned += OnUserUnbannedAsync;
+
+            //Invite link Events
+            _client.InviteCreated += OnInviteCreatedAsync;
+            _client.InviteDeleted += OnInviteDeletedAsync;
+
+             _logger.LogInformation("Guild event handlers loaded.");
+
         }
         
         public async Task StopAsync(){
@@ -202,5 +225,117 @@ namespace DiscordBot{
             
         }
 
+
+        private async Task OnMessageUpdatedAsync(Cacheable<IMessage, ulong> cacheable, SocketMessage message, ISocketMessageChannel channel){
+            var guildChannel = channel as SocketGuildChannel ?? throw new Exception("Updated Message Channel Invalid. Could not cast as SocketGuildChannel.");
+            var userMessage = message as IUserMessage ?? throw new Exception("Updated Message User Invalid. Could not cast as UserMessage.");
+            var guild = guildChannel.Guild;
+            
+            //_logger.LogInformation($"{DateTime.Now.ToShortTimeString()} - {userMessage.Author.GlobalName} edited a message in {guild.Name} in #{channel.Name}.\nFrom:\"{cacheable.Value.Content}\"\nTo:\"{message.Content}\"");
+
+
+            //Check if guild has a modlog channel set up
+            var modlog = GetGuildModlog(guild);
+            if (modlog == null)
+                return;
+
+            var author = new EmbedAuthorBuilder(){
+                Name = userMessage.Author.GlobalName,
+                IconUrl = userMessage.Author.GetAvatarUrl()
+            };
+            var title = "Message Edited";
+            var description = $"**From**\n\n{cacheable.Value.Content}\n\n**To**\n\n{message.Content}";
+            var color = Color.Blue;
+            var log = new EmbedBuilder(){
+                Author = author,
+                Title = title,
+                Description = description,
+                Color = color
+            }.WithCurrentTimestamp()
+            .Build();
+
+            await modlog.SendMessageAsync("", embed: log);
+        }
+
+        private async Task OnMessageDeletedAsync(Cacheable<IMessage, ulong> message, Cacheable<IMessageChannel, ulong> channel){
+            var guildChannel = channel.Value as SocketGuildChannel ?? throw new Exception("Updated Message Channel Invalid. Could not cast as SocketGuildChannel.");
+            var userMessage = message.Value as IUserMessage ?? throw new Exception("Updated Message User Invalid. Could not cast as UserMessage.");
+            var guild = guildChannel.Guild;
+            
+            //_logger.LogInformation($"{DateTime.Now.ToShortTimeString()} - {userMessage.Author.GlobalName} deleted a message in {guild.Name} in #{guildChannel.Name}.\nContent:\"{userMessage.Content}\"");
+
+
+            //Check if guild has a modlog channel set up
+            var modlog = GetGuildModlog(guild);
+            if (modlog == null)
+                return;
+
+            var author = new EmbedAuthorBuilder(){
+                Name = userMessage.Author.GlobalName,
+                IconUrl = userMessage.Author.GetAvatarUrl()
+            };
+            var title = "Message Deleted";
+            var description = $"**Content**\n\n{userMessage.Content}";
+            var color = Color.Red;
+            var log = new EmbedBuilder(){
+                Author = author,
+                Title = title,
+                Description = description,
+                Color = color
+            }.WithCurrentTimestamp()
+            .Build();
+
+            await modlog.SendMessageAsync("", embed: log);
+        }
+
+        private async Task OnRoleCreatedAsync(SocketRole role){
+
+        }
+
+        private async Task OnRoleUpdatedAsync(SocketRole oldRole, SocketRole newRole){
+
+        }
+
+        private async Task OnRoleDeletedAsync(SocketRole role){
+
+        }
+
+        private async Task OnUserJoinedAsync(SocketGuildUser user){
+
+        }
+
+        private async Task OnUserUpdatedAsync(SocketUser oldUser, SocketUser newUser){
+
+        }
+
+        private async Task OnUserLeftAsync(SocketGuild guild, SocketUser user){
+
+        }
+
+        private async Task OnUserBannedAsync(SocketUser user, SocketGuild guild){
+
+        }
+
+        private async Task OnUserUnbannedAsync(SocketUser user, SocketGuild guild){
+
+        }
+
+        private async Task OnInviteCreatedAsync(SocketInvite invite){
+
+        }
+
+        private async Task OnInviteDeletedAsync(SocketChannel channel, string code){
+
+        }
+
+        //Helper methods
+        private IMessageChannel? GetGuildModlog(SocketGuild guild){
+            var modlogChannelId = _db.GetGuildSettingsAsync(guild.Id).Result.Modlog;
+            if (string.IsNullOrWhiteSpace(modlogChannelId))
+                return null;
+            var modlogChannel = guild.GetChannel(ulong.Parse(modlogChannelId)) as IMessageChannel;
+
+            return modlogChannel;
+        }
     }
 }

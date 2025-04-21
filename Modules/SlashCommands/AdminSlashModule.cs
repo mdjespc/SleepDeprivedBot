@@ -136,4 +136,12 @@ public class AdminSlashModule : SlashCommandModule{
     public async Task WarningsCommandAsync(){
         await RespondAsync("Coming soon!");
     }
+
+
+    [SlashCommand("mute", "Mute a member")]
+    public async Task MuteCommandAsync(IUser member, [Summary(description:"Duration in minutes. Defaults to zero (indefinitely).")]int duration = 30, string reason = ""){
+        member = member as IGuildUser ?? throw new Exception("Invalid User");
+        
+        await RespondAsync("Coming soon!");
+    }
 }
