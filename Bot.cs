@@ -39,7 +39,8 @@ namespace DiscordBot{
 
             //Initialize a DiscordSocketClient object that maintains communication between the bot and a server with the specified configuration.
             DiscordSocketConfig clientConfiguration = new (){
-                GatewayIntents = GatewayIntents.AllUnprivileged | GatewayIntents.MessageContent
+                GatewayIntents = GatewayIntents.AllUnprivileged | GatewayIntents.MessageContent,
+                MessageCacheSize = 100
             };
             _client = new DiscordSocketClient(clientConfiguration);
 
@@ -226,13 +227,19 @@ namespace DiscordBot{
         }
 
 
-        private async Task OnMessageUpdatedAsync(Cacheable<IMessage, ulong> cacheable, SocketMessage message, ISocketMessageChannel channel){
-            var guildChannel = channel as SocketGuildChannel ?? throw new Exception("Updated Message Channel Invalid. Could not cast as SocketGuildChannel.");
-            var userMessage = message as IUserMessage ?? throw new Exception("Updated Message User Invalid. Could not cast as UserMessage.");
-            var guild = guildChannel.Guild;
-            
-            //_logger.LogInformation($"{DateTime.Now.ToShortTimeString()} - {userMessage.Author.GlobalName} edited a message in {guild.Name} in #{channel.Name}.\nFrom:\"{cacheable.Value.Content}\"\nTo:\"{message.Content}\"");
+        private async Task OnMessageUpdatedAsync(Cacheable<IMessage, ulong> oldMessage, SocketMessage message, ISocketMessageChannel channel){
+            if (!oldMessage.HasValue){
+                _logger.LogError("A message was updated, but bot was unable to retrieve its cached content data.");
+                return;
+            }
 
+            var oldContent = oldMessage.Value.Content;
+            var content = message.Content;
+            var _channel = channel as SocketGuildChannel ?? throw new Exception("Unable to convert ISocketMessageChannel to SocketGuildChannel");
+            var guild = _channel.Guild;
+            
+            _logger.LogInformation($"{DateTime.Now.ToShortTimeString()} - {message.Author.Username} edited a message in {guild.Name} in #{_channel.Name}.\nFrom:\"{oldContent}\"\nTo:\"{content}\"");
+       
 
             //Check if guild has a modlog channel set up
             var modlog = GetGuildModlog(guild);
@@ -240,11 +247,11 @@ namespace DiscordBot{
                 return;
 
             var author = new EmbedAuthorBuilder(){
-                Name = userMessage.Author.GlobalName,
-                IconUrl = userMessage.Author.GetAvatarUrl()
+                Name = message.Author.GlobalName,
+                IconUrl = message.Author.GetAvatarUrl()
             };
             var title = "Message Edited";
-            var description = $"**From**\n\n{cacheable.Value.Content}\n\n**To**\n\n{message.Content}";
+            var description = $"**From**\n\n{oldContent}\n\n**To**\n\n{content}";
             var color = Color.Blue;
             var log = new EmbedBuilder(){
                 Author = author,
@@ -258,24 +265,38 @@ namespace DiscordBot{
         }
 
         private async Task OnMessageDeletedAsync(Cacheable<IMessage, ulong> message, Cacheable<IMessageChannel, ulong> channel){
-            var guildChannel = channel.Value as SocketGuildChannel ?? throw new Exception("Updated Message Channel Invalid. Could not cast as SocketGuildChannel.");
-            var userMessage = message.Value as IUserMessage ?? throw new Exception("Updated Message User Invalid. Could not cast as UserMessage.");
-            var guild = guildChannel.Guild;
-            
-            //_logger.LogInformation($"{DateTime.Now.ToShortTimeString()} - {userMessage.Author.GlobalName} deleted a message in {guild.Name} in #{guildChannel.Name}.\nContent:\"{userMessage.Content}\"");
+            if (!message.HasValue){
+                _logger.LogError("A message was deleted, but bot was unable to retrieve its cached content data.");
+                return;
+            }
+            if (!channel.HasValue){
+                _logger.LogError("A message was deleted, but bot was unable to retrieve its cached channel data.");
+                return;
+            }
+            var _author = message.Value.Author;
+            var _content = message.Value.Content;
+            var _channel = message.Value.Channel as IGuildChannel ?? throw new Exception("Could not retrieve guild data from deleted message");
+            var _guild = (SocketGuild) _channel.Guild;
 
+            if (_guild == null){
+                _logger.LogError("A message was deleted, but bot was unable to retrieve its cached guild data.");
+                return;
+            }
+
+            _logger.LogInformation($"{DateTime.Now.ToShortTimeString()} - {_author.Username} deleted a message in {_guild.Name} in #{_channel.Name}.\nContent:\"{_content}\"");
+            
 
             //Check if guild has a modlog channel set up
-            var modlog = GetGuildModlog(guild);
+            var modlog = GetGuildModlog(_guild);
             if (modlog == null)
                 return;
 
             var author = new EmbedAuthorBuilder(){
-                Name = userMessage.Author.GlobalName,
-                IconUrl = userMessage.Author.GetAvatarUrl()
+                Name = _author.Username,
+                IconUrl = _author.GetAvatarUrl()
             };
             var title = "Message Deleted";
-            var description = $"**Content**\n\n{userMessage.Content}";
+            var description = $"**Content**\n\n{_content}";
             var color = Color.Red;
             var log = new EmbedBuilder(){
                 Author = author,
