@@ -17,7 +17,7 @@ using System.Threading.Tasks;
 namespace DiscordBot.Modules.SlashCommands;
 
 [RequireAdminOrOwner]
-//[DefaultMemberPermissions(GuildPermission.KickMembers)]
+[DefaultMemberPermissions(GuildPermission.ModerateMembers)]
 public class AdminSlashModule : SlashCommandModule{
     public AdminSlashModule(IMongoDbService db, ILanguageManager langManager, ILogger<Bot> logger) : base(db, langManager, logger) {}
 
@@ -274,6 +274,7 @@ public class AdminSlashModule : SlashCommandModule{
         }
 
         await member.RemoveRoleAsync(role);
+        await RespondAsync("Member has been unmuted.", ephemeral: true);
 
         string title = "Unmute Notice";
         string description = $"You have been unmuted by the {Context.Guild.Name} moderation team.";
@@ -314,4 +315,113 @@ public class AdminSlashModule : SlashCommandModule{
 
         await modlogChannel.SendMessageAsync("", embed: modlog);
     }
+
+    [SlashCommand("kick", "Kick a member.")]
+    public async Task KickCommandAsync(IGuildUser member, string reason = ""){
+        var user = (IUser) member;
+        reason = string.IsNullOrWhiteSpace(reason) ? "No reason provided." : reason;
+
+        //Prioritize the mod action, then send notice to ex-member
+        await member.KickAsync(reason: reason);
+
+        var title = "Kick Notice";
+        var description = $"You have been kicked from {Context.Guild.Name}.\n\n**Reason:**\n{reason}";
+        var color = Discord.Color.Red;
+        
+        var notice = new EmbedBuilder(){
+            Title = title,
+            Description = description,
+            Color = color
+        }.WithCurrentTimestamp()
+        .Build();
+        await user.SendMessageAsync("", embed: notice);
+        
+        //THEN log the mod action
+        await RespondAsync("Member has been kicked from the server.", ephemeral: true);
+
+        //Log the mod action in a modlog channel, if one is set up.
+        var modlogChannelId = _db.GetGuildSettingsAsync(Context.Guild.Id).Result.Modlog;
+        if (string.IsNullOrWhiteSpace(modlogChannelId))
+            return;
+        //ChannelID is passed as a string so we need to convert it to ulong type
+        var modlogChannel = Context.Guild.GetChannel(ulong.Parse(modlogChannelId)) as IMessageChannel;
+        if (modlogChannel == null)
+            return;
+
+        var author = new EmbedAuthorBuilder(){
+                Name = Context.User.GlobalName,
+                IconUrl = Context.User.GetAvatarUrl()
+            };
+        var thumbnailUrl = user.GetAvatarUrl();
+        title = "Moderation Action";
+        description = $"**Action Type:** Kick\n\n**Issued by:** {Context.User.Username}\n\n**Issued to**: {user.Username}\n\n**Reason:**\n{reason}";
+
+        var modlog = new EmbedBuilder(){
+            Author = author,
+            ThumbnailUrl = thumbnailUrl,
+            Title = title,
+            Description = description,
+            Color = color
+        }.WithCurrentTimestamp()
+        .Build();
+
+        await modlogChannel.SendMessageAsync("", embed: modlog);
+    }
+
+    [SlashCommand("ban", "Ban a member.")]
+    public async Task BanCommandAsync(IGuildUser member, string reason = ""){
+        var user = (IUser) member;
+        reason = string.IsNullOrWhiteSpace(reason) ? "No reason provided." : reason;
+
+        //Prioritize the mod action, then send notice to ex-member
+        await member.BanAsync(reason: reason);
+
+        var title = "Ban Notice";
+        var description = $"You have been banned from {Context.Guild.Name}.\n\n**Reason:**\n{reason}";
+        var color = Discord.Color.DarkRed;
+        
+        var notice = new EmbedBuilder(){
+            Title = title,
+            Description = description,
+            Color = color
+        }.WithCurrentTimestamp()
+        .Build();
+        await user.SendMessageAsync("", embed: notice);
+        
+        //then log the mod action
+        await RespondAsync("Member has been banned from the server.", ephemeral: true);
+
+        //Log the mod action in a modlog channel, if one is set up.
+        var modlogChannelId = _db.GetGuildSettingsAsync(Context.Guild.Id).Result.Modlog;
+        if (string.IsNullOrWhiteSpace(modlogChannelId))
+            return;
+        //ChannelID is passed as a string so we need to convert it to ulong type
+        var modlogChannel = Context.Guild.GetChannel(ulong.Parse(modlogChannelId)) as IMessageChannel;
+        if (modlogChannel == null)
+            return;
+
+        var author = new EmbedAuthorBuilder(){
+                Name = Context.User.GlobalName,
+                IconUrl = Context.User.GetAvatarUrl()
+            };
+        var thumbnailUrl = user.GetAvatarUrl();
+        title = "Moderation Action";
+        description = $"**Action Type:** Ban\n\n**Issued by:** {Context.User.Username}\n\n**Issued to**: {user.Username}\n\n**Reason:**\n{reason}";
+
+        var modlog = new EmbedBuilder(){
+            Author = author,
+            ThumbnailUrl = thumbnailUrl,
+            Title = title,
+            Description = description,
+            Color = color
+        }.WithCurrentTimestamp()
+        .Build();
+
+        await modlogChannel.SendMessageAsync("", embed: modlog);
+    }
+
+    // [SlashCommand("unban", "Unban a member")]
+    // public async Task UnbanCommandAsync(ulong id){
+
+    // }
 }
