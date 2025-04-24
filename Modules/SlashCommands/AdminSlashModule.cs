@@ -110,26 +110,17 @@ public class AdminSlashModule : SlashCommandModule{
         await member.SendMessageAsync("", embed:warning);
         await RespondAsync("User has been warned. You can view all active warnings by using /warnings.", ephemeral:true);
 
-        //Log the warning action in a modlog channel, if one is set up.
-        var modlogChannelId = _db.GetGuildSettingsAsync(Context.Guild.Id).Result.Modlog;
-        if (string.IsNullOrWhiteSpace(modlogChannelId))
-            return;
-        //ChannelID is passed as a string so we need to convert it to ulong type
-        var modlogChannel = Context.Guild.GetChannel(ulong.Parse(modlogChannelId)) as IMessageChannel;
+        var modlogChannel = await GetGuildModlogChannelAsync(Context.Guild);
         if (modlogChannel == null)
             return;
 
+        var author = new EmbedAuthorBuilder(){
+                Name = Context.User.GlobalName,
+                IconUrl = Context.User.GetAvatarUrl()
+            };
         title = "Moderation Action";
-        description = $"**Action Type:** Warning\n\n**Issued by:** {Context.User}#{Context.User.Discriminator}\n\n**Issued to**: {member}#{member.Discriminator}\n\n**Reason:**\n{reason}";
-        var modlog = new EmbedBuilder(){
-            ThumbnailUrl = thumbnailUrl,
-            Title = title,
-            Description = description,
-            Color = color,
-        }.WithCurrentTimestamp()
-         .Build();
-
-        await modlogChannel.SendMessageAsync("", embed: modlog);
+        description = $"**Action Type:** Warning\n\n**Issued by:** {Context.User.Username}\n\n**Issued to**: {member.Username}\n\n**Reason:**\n{reason}";
+        await SendModlogAsync(modlogChannel, author: author, thumbnailUrl: thumbnailUrl, title: title, description: description, color: color);
     }
 
     [SlashCommand("warnings", "View a list of all active warnings.")]
@@ -236,12 +227,7 @@ public class AdminSlashModule : SlashCommandModule{
             });
         }
 
-        //Log the mod action in a modlog channel, if one is set up.
-        var modlogChannelId = _db.GetGuildSettingsAsync(Context.Guild.Id).Result.Modlog;
-        if (string.IsNullOrWhiteSpace(modlogChannelId))
-            return;
-        //ChannelID is passed as a string so we need to convert it to ulong type
-        var modlogChannel = Context.Guild.GetChannel(ulong.Parse(modlogChannelId)) as IMessageChannel;
+        var modlogChannel = await GetGuildModlogChannelAsync(Context.Guild);
         if (modlogChannel == null)
             return;
 
@@ -252,15 +238,7 @@ public class AdminSlashModule : SlashCommandModule{
         title = "Moderation Action";
         description = $"**Action Type:** Mute\n\n**Issued by:** {Context.User.Username}\n\n**Issued to**: {member.Username}\n\n**Reason:**\n{reason}\n\n**Duration:** {(duration == 0 ? "Unspecified" : $"{duration} minutes")}";
         color = Discord.Color.Red;
-        var modlog = new EmbedBuilder(){
-            ThumbnailUrl = thumbnailUrl,
-            Title = title,
-            Description = description,
-            Color = color,
-        }.WithCurrentTimestamp()
-         .Build();
-
-        await modlogChannel.SendMessageAsync("", embed: modlog);
+        await SendModlogAsync(modlogChannel, author: author, thumbnailUrl: thumbnailUrl, title: title, description: description, color: color);
     }
 
     [SlashCommand("unmute", "Unmute a member")]
@@ -287,12 +265,7 @@ public class AdminSlashModule : SlashCommandModule{
         .Build();
         await member.SendMessageAsync("", embed: notice);
 
-        //Log the mod action in a modlog channel, if one is set up.
-        var modlogChannelId = _db.GetGuildSettingsAsync(Context.Guild.Id).Result.Modlog;
-        if (string.IsNullOrWhiteSpace(modlogChannelId))
-            return;
-        //ChannelID is passed as a string so we need to convert it to ulong type
-        var modlogChannel = Context.Guild.GetChannel(ulong.Parse(modlogChannelId)) as IMessageChannel;
+        var modlogChannel = await GetGuildModlogChannelAsync(Context.Guild);
         if (modlogChannel == null)
             return;
 
@@ -304,16 +277,7 @@ public class AdminSlashModule : SlashCommandModule{
         title = "Moderation Action";
         description = $"**Action Type:** Unmute\n\n**Issued by:** {Context.User.Username}\n\n**Issued to**: {member.Username}";
         color = Discord.Color.Red;
-        var modlog = new EmbedBuilder(){
-            Author = author,
-            ThumbnailUrl = thumbnailUrl,
-            Title = title,
-            Description = description,
-            Color = color,
-        }.WithCurrentTimestamp()
-         .Build();
-
-        await modlogChannel.SendMessageAsync("", embed: modlog);
+        await SendModlogAsync(modlogChannel, author: author, thumbnailUrl: thumbnailUrl, title: title, description: description, color: color);
     }
 
     [SlashCommand("kick", "Kick a member.")]
@@ -339,12 +303,7 @@ public class AdminSlashModule : SlashCommandModule{
         //THEN log the mod action
         await RespondAsync("Member has been kicked from the server.", ephemeral: true);
 
-        //Log the mod action in a modlog channel, if one is set up.
-        var modlogChannelId = _db.GetGuildSettingsAsync(Context.Guild.Id).Result.Modlog;
-        if (string.IsNullOrWhiteSpace(modlogChannelId))
-            return;
-        //ChannelID is passed as a string so we need to convert it to ulong type
-        var modlogChannel = Context.Guild.GetChannel(ulong.Parse(modlogChannelId)) as IMessageChannel;
+        var modlogChannel = await GetGuildModlogChannelAsync(Context.Guild);
         if (modlogChannel == null)
             return;
 
@@ -355,17 +314,7 @@ public class AdminSlashModule : SlashCommandModule{
         var thumbnailUrl = user.GetAvatarUrl();
         title = "Moderation Action";
         description = $"**Action Type:** Kick\n\n**Issued by:** {Context.User.Username}\n\n**Issued to**: {user.Username}\n\n**Reason:**\n{reason}";
-
-        var modlog = new EmbedBuilder(){
-            Author = author,
-            ThumbnailUrl = thumbnailUrl,
-            Title = title,
-            Description = description,
-            Color = color
-        }.WithCurrentTimestamp()
-        .Build();
-
-        await modlogChannel.SendMessageAsync("", embed: modlog);
+        await SendModlogAsync(modlogChannel, author: author, thumbnailUrl: thumbnailUrl, title: title, description: description, color: color);
     }
 
     [SlashCommand("ban", "Ban a member.")]
@@ -391,12 +340,7 @@ public class AdminSlashModule : SlashCommandModule{
         //then log the mod action
         await RespondAsync("Member has been banned from the server.", ephemeral: true);
 
-        //Log the mod action in a modlog channel, if one is set up.
-        var modlogChannelId = _db.GetGuildSettingsAsync(Context.Guild.Id).Result.Modlog;
-        if (string.IsNullOrWhiteSpace(modlogChannelId))
-            return;
-        //ChannelID is passed as a string so we need to convert it to ulong type
-        var modlogChannel = Context.Guild.GetChannel(ulong.Parse(modlogChannelId)) as IMessageChannel;
+        var modlogChannel = await GetGuildModlogChannelAsync(Context.Guild);
         if (modlogChannel == null)
             return;
 
@@ -407,21 +351,7 @@ public class AdminSlashModule : SlashCommandModule{
         var thumbnailUrl = user.GetAvatarUrl();
         title = "Moderation Action";
         description = $"**Action Type:** Ban\n\n**Issued by:** {Context.User.Username}\n\n**Issued to**: {user.Username}\n\n**Reason:**\n{reason}";
-
-        var modlog = new EmbedBuilder(){
-            Author = author,
-            ThumbnailUrl = thumbnailUrl,
-            Title = title,
-            Description = description,
-            Color = color
-        }.WithCurrentTimestamp()
-        .Build();
-
-        await modlogChannel.SendMessageAsync("", embed: modlog);
+        await SendModlogAsync(modlogChannel, author: author, thumbnailUrl: thumbnailUrl, title: title, description: description, color: color);
     }
 
-    // [SlashCommand("unban", "Unban a member")]
-    // public async Task UnbanCommandAsync(ulong id){
-
-    // }
 }

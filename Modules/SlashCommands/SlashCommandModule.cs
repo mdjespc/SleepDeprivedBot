@@ -1,3 +1,5 @@
+using System.Threading.Tasks;
+using Discord;
 using Discord.Interactions;
 using DiscordBot.Services;
 using Microsoft.Extensions.Logging;
@@ -25,6 +27,33 @@ public class SlashCommandModule : InteractionModuleBase<SocketInteractionContext
         Green,
         Orange,
         Gold
+    }
+
+    public async Task<IMessageChannel?> GetGuildModlogChannelAsync(IGuild guild){
+        var settings = await _db.GetGuildSettingsAsync(guild.Id);
+        if (string.IsNullOrWhiteSpace(settings.Modlog))
+            return null;
+        //ChannelID is stored in db as a string so we need to convert it to ulong type
+        return guild.GetChannelAsync(ulong.Parse(settings.Modlog)) as IMessageChannel;
+    }
+
+    public async Task SendModlogAsync(IMessageChannel channel,
+                                      EmbedAuthorBuilder? author = null,
+                                      string? thumbnailUrl = null,
+                                      string? title = null,
+                                      string? description = null,
+                                      Color? color = null){
+        
+        var modlog = new EmbedBuilder(){
+            Author = author,
+            ThumbnailUrl = thumbnailUrl,
+            Title = title,
+            Description = description,
+            Color = color
+        }.WithCurrentTimestamp()
+        .Build();
+
+        await channel.SendMessageAsync("", embed: modlog);
     }
 
 }
