@@ -104,7 +104,7 @@ namespace DiscordBot{
 
             //User Events
             _client.UserJoined += OnUserJoinedAsync;
-            _client.UserUpdated += OnUserUpdatedAsync;
+            _client.GuildMemberUpdated += OnGuildMemberUpdatedAsync;
             _client.UserLeft += OnUserLeftAsync;
             _client.UserBanned += OnUserBannedAsync;
             _client.UserUnbanned += OnUserUnbannedAsync;
@@ -229,7 +229,7 @@ namespace DiscordBot{
 
         private async Task OnMessageUpdatedAsync(Cacheable<IMessage, ulong> oldMessage, SocketMessage message, ISocketMessageChannel channel){
             if (!oldMessage.HasValue){
-                _logger.LogError("A message was updated, but bot was unable to retrieve its cached content data.");
+                _logger.LogWarning("A message was updated, but bot was unable to retrieve its cached content data.");
                 return;
             }
 
@@ -247,11 +247,11 @@ namespace DiscordBot{
                 return;
 
             var author = new EmbedAuthorBuilder(){
-                Name = message.Author.GlobalName,
+                Name = message.Author.Username,
                 IconUrl = message.Author.GetAvatarUrl()
             };
-            var title = "Message Edited";
-            var description = $"**From**\n\n{oldContent}\n\n**To**\n\n{content}";
+            var title = $"Message Edited in #{_channel}";
+            var description = $"**From**\n{oldContent}\n**To**\n{content}";
             var color = Color.Blue;
             var log = new EmbedBuilder(){
                 Author = author,
@@ -266,11 +266,11 @@ namespace DiscordBot{
 
         private async Task OnMessageDeletedAsync(Cacheable<IMessage, ulong> message, Cacheable<IMessageChannel, ulong> channel){
             if (!message.HasValue){
-                _logger.LogError("A message was deleted, but bot was unable to retrieve its cached content data.");
+                _logger.LogWarning("A message was deleted, but bot was unable to retrieve its cached content data.");
                 return;
             }
             if (!channel.HasValue){
-                _logger.LogError("A message was deleted, but bot was unable to retrieve its cached channel data.");
+                _logger.LogWarning("A message was deleted, but bot was unable to retrieve its cached channel data.");
                 return;
             }
             var _author = message.Value.Author;
@@ -279,7 +279,7 @@ namespace DiscordBot{
             var _guild = (SocketGuild) _channel.Guild;
 
             if (_guild == null){
-                _logger.LogError("A message was deleted, but bot was unable to retrieve its cached guild data.");
+                _logger.LogWarning("A message was deleted, but bot was unable to retrieve its cached guild data.");
                 return;
             }
 
@@ -295,8 +295,8 @@ namespace DiscordBot{
                 Name = _author.Username,
                 IconUrl = _author.GetAvatarUrl()
             };
-            var title = "Message Deleted";
-            var description = $"**Content**\n\n{_content}";
+            var title = $"Message Deleted in #{_channel}";
+            var description = $"**Content**\n{_content}";
             var color = Color.Red;
             var log = new EmbedBuilder(){
                 Author = author,
@@ -310,39 +310,252 @@ namespace DiscordBot{
         }
 
         private async Task OnRoleCreatedAsync(SocketRole role){
+            _logger.LogInformation($"{DateTime.Now.ToShortTimeString()} - New role {role.Name} has been created in {role.Guild}.");
 
+             //Check if guild has a modlog channel set up
+            var modlog = GetGuildModlog(role.Guild);
+            if (modlog == null)
+                return;
+
+            var title = "Role Created";
+            var description = $"**Mention:** {role.Mention}\n**Color:** {role.Color.ToString}\n**Hoisted:** {role.IsHoisted}\n**Mentionable:**{role.IsMentionable}\n**Position:**{role.Position}\n**ID:**{role.Id}";
+            var color = Color.Green;
+            var log = new EmbedBuilder(){
+                Title = title,
+                Description = description,
+                Color = color
+            }.WithCurrentTimestamp()
+            .Build();
+
+            await modlog.SendMessageAsync("", embed: log);
         }
 
-        private async Task OnRoleUpdatedAsync(SocketRole oldRole, SocketRole newRole){
+        private async Task OnRoleUpdatedAsync(SocketRole cachedRole, SocketRole role){
+            _logger.LogInformation($"{DateTime.Now.ToShortTimeString()} - Role {role.Name} has been updated in {role.Guild}.");
 
+            //Check if guild has a modlog channel set up
+            var modlog = GetGuildModlog(role.Guild);
+            if (modlog == null)
+                return;
+
+            var title = "Role Updated";
+            var description = $"**Mention:** {role.Mention}\n**Color:** {role.Color.ToString}\n**Hoisted:** {role.IsHoisted}\n**Mentionable:**{role.IsMentionable}\n**Position:**{role.Position}\n**ID:**{role.Id}";
+            var color = Color.Blue;
+            var log = new EmbedBuilder(){
+                Title = title,
+                Description = description,
+                Color = color
+            }.WithCurrentTimestamp()
+            .Build();
+
+            await modlog.SendMessageAsync("", embed: log);
         }
 
         private async Task OnRoleDeletedAsync(SocketRole role){
+            _logger.LogInformation($"{DateTime.Now.ToShortTimeString()} - Role {role.Name} has been deleted in {role.Guild}.");
 
+            //Check if guild has a modlog channel set up
+            var modlog = GetGuildModlog(role.Guild);
+            if (modlog == null)
+                return;
+
+            var title = "Role Deleted";
+            var description = $"**Mention:** {role.Mention}\n**Color:** {role.Color.ToString}\n**Hoisted:** {role.IsHoisted}\n**Mentionable:**{role.IsMentionable}\n**Position:**{role.Position}\n**ID:**{role.Id}";
+            var color = Color.Red;
+            var log = new EmbedBuilder(){
+                Title = title,
+                Description = description,
+                Color = color
+            }.WithCurrentTimestamp()
+            .Build();
+
+            await modlog.SendMessageAsync("", embed: log);
         }
 
         private async Task OnUserJoinedAsync(SocketGuildUser user){
+            _logger.LogInformation($"{DateTime.Now.ToShortTimeString()} - {user.Username} joined in {user.Guild}.");
+
+            var welcomeChannel = GetGuildWelcomeChannel(user.Guild);
+            var modlog = GetGuildModlog(user.Guild);
+
+            if (welcomeChannel != null){
+                var message = _db.GetGuildSettingsAsync(user.Guild.Id).Result.WelcomeMessage;
+                message = string.IsNullOrWhiteSpace(message) ? $"**{user.GlobalName}** just joined!" : FormatMessage(message);
+                await welcomeChannel.SendMessageAsync(message);
+            }
+
+            if (modlog != null){
+                var author = new EmbedAuthorBuilder(){
+                Name = user.Username,
+                IconUrl = user.GetAvatarUrl()
+                };
+                var title = $"Member Joined";
+                var description = $"**Mention:** {user.Mention}\n**ID:** {user.Id}";
+                var color = Color.Green;
+                var log = new EmbedBuilder(){
+                    Author = author,
+                    Title = title,
+                    Description = description,
+                    Color = color
+                }.WithCurrentTimestamp()
+                .Build();
+
+                await modlog.SendMessageAsync("", embed: log); 
+            }
+
 
         }
 
-        private async Task OnUserUpdatedAsync(SocketUser oldUser, SocketUser newUser){
+        private async Task OnGuildMemberUpdatedAsync(Cacheable<SocketGuildUser, ulong> cachedUser, SocketGuildUser user){
+            if (!cachedUser.HasValue){
+                _logger.LogWarning("A guild user was updated, but bot was unable to retrieved its cached data.");
+                return;
+            }
+            _logger.LogInformation($"{DateTime.Now.ToShortTimeString()} - Member ({cachedUser.Value.Username}) was updated in {cachedUser.Value.Guild.Name}.");
 
+            var modlog = GetGuildModlog(user.Guild);
+            if (modlog == null)
+                return;
+
+            var author = new EmbedAuthorBuilder(){
+                Name = user.Username,
+                IconUrl = user.GetAvatarUrl()
+            };
+            var title = "";
+            var description = "";
+            var color = Color.Default;
+
+            //Check if nickname was changed
+            if (user.Nickname != cachedUser.Value.Nickname){
+                title = "Nickname Updated";
+                description = $"**From**\n{cachedUser.Value.Nickname}\n**To**\n{user.Nickname}\n**Mention:** {user.Mention}\n**ID:** {user.Id}";
+                color = Color.Teal;
+            }else if (user.Roles.Count > cachedUser.Value.Roles.Count){ //Compare old roles vs new roles
+                var difference = user.Roles.Except(cachedUser.Value.Roles);
+                title = "Role Added";
+                description = $"{string.Join(" ", difference)}";
+                color = Color.DarkTeal;
+            }else if (user.Roles.Count < cachedUser.Value.Roles.Count){
+                var difference = cachedUser.Value.Roles.Except(user.Roles);
+                title = "Role Removed";
+                description = $"{string.Join(" ", difference)}";
+                color = Color.DarkMagenta;
+            }else{
+                _logger.LogWarning($"A guild user was updated in {user.Guild.Name}, but the update type is unknown.");
+                return;
+            }
+
+            var log = new EmbedBuilder(){
+                Author = author,
+                Title = title,
+                Description = description,
+                Color = color
+            }.WithCurrentTimestamp()
+            .Build();
+
+            await modlog.SendMessageAsync("", embed: log);
         }
 
         private async Task OnUserLeftAsync(SocketGuild guild, SocketUser user){
+            _logger.LogInformation($"{DateTime.Now.ToShortTimeString()} - {user.Username} left {guild.Name}.");
 
+            var modlog = GetGuildModlog(guild);
+            if (modlog == null)
+                return;
+
+            var author = new EmbedAuthorBuilder(){
+                Name = user.Username,
+                IconUrl = user.GetAvatarUrl()
+            };
+            var title = $"Member Left";
+            var description = $"**Mention:** {user.Mention}\n**ID:** {user.Id}";
+            var color = Color.Red;
+            var log = new EmbedBuilder(){
+                Author = author,
+                Title = title,
+                Description = description,
+                Color = color
+            }.WithCurrentTimestamp()
+            .Build();
+
+            await modlog.SendMessageAsync("", embed: log);
         }
 
         private async Task OnUserBannedAsync(SocketUser user, SocketGuild guild){
+            _logger.LogInformation($"{DateTime.Now.ToShortTimeString()} - {user.Username} was banned from {guild.Name}.");
 
+            // var modlog = GetGuildModlog(guild);
+            // if (modlog == null)
+            //     return;
+
+            // var author = new EmbedAuthorBuilder(){
+            //     Name = user.Username,
+            //     IconUrl = user.GetAvatarUrl()
+            // };
+            // var title = $"Member Banned";
+            // var description = $"**Mention:** {user.Mention}\n**ID:** {user.Id}";
+            // var color = Color.DarkRed;
+            // var log = new EmbedBuilder(){
+            //     Author = author,
+            //     Title = title,
+            //     Description = description,
+            //     Color = color
+            // }.WithCurrentTimestamp()
+            // .Build();
+
+            // await modlog.SendMessageAsync("", embed: log);
         }
 
         private async Task OnUserUnbannedAsync(SocketUser user, SocketGuild guild){
+            _logger.LogInformation($"{DateTime.Now.ToShortTimeString()} - {user.Username} was unbanned from {guild.Name}.");
 
+            var modlog = GetGuildModlog(guild);
+            if (modlog == null)
+                return;
+
+            var author = new EmbedAuthorBuilder(){
+                Name = user.Username,
+                IconUrl = user.GetAvatarUrl()
+            };
+            var title = $"User Unbanned";
+            var description = $"**ID:** {user.Id}";
+            var color = Color.Blue;
+            var log = new EmbedBuilder(){
+                Author = author,
+                Title = title,
+                Description = description,
+                Color = color
+            }.WithCurrentTimestamp()
+            .Build();
+
+            await modlog.SendMessageAsync("", embed: log);
         }
 
         private async Task OnInviteCreatedAsync(SocketInvite invite){
+            _logger.LogInformation($"{DateTime.Now.ToShortTimeString()} - {invite.Inviter.Username} created an invite for {invite.Guild}.");
 
+            var modlog = GetGuildModlog(invite.Guild);
+            if (modlog == null)
+                return;
+
+            var author = new EmbedAuthorBuilder(){
+                Name = invite.Inviter.Username ?? "Unknown inviter",
+                IconUrl = invite.Inviter.GetAvatarUrl() ?? ""
+            };
+            var title = $"Invite created";
+            var description = $"Expires: {(invite.IsTemporary ? invite.ExpiresAt : "N/A _(Link is permanent)_")}";
+            var url = invite.Url;
+            var color = Color.Green;
+            var log = new EmbedBuilder(){
+                Author = author,
+                Title = title,
+                Description = description,
+                Url = url,
+                Color = color
+            }.WithCurrentTimestamp()
+            .Build();
+
+            await modlog.SendMessageAsync("", embed: log);
         }
 
         private async Task OnInviteDeletedAsync(SocketChannel channel, string code){
@@ -357,6 +570,29 @@ namespace DiscordBot{
             var modlogChannel = guild.GetChannel(ulong.Parse(modlogChannelId)) as IMessageChannel;
 
             return modlogChannel;
+        }
+
+        private IMessageChannel? GetGuildWelcomeChannel(SocketGuild guild){
+            var welcomeChannelId = _db.GetGuildSettingsAsync(guild.Id).Result.WelcomeChannel;
+            if (string.IsNullOrWhiteSpace(welcomeChannelId))
+                return null;
+            var welcomeChannel = guild.GetChannel(ulong.Parse(welcomeChannelId)) as IMessageChannel;
+
+            return welcomeChannel;
+        }
+
+        private string FormatMessage(string message, IUser? user = null){
+            string[] wildcards = {"@u"};
+
+            foreach (var _ in wildcards){
+                if (!message.Contains(_))
+                    continue;
+                
+                if (_.Equals("@u") && user != null)
+                    message = message.Replace(_, $"**{user.GlobalName}**");
+            }
+
+            return message;
         }
     }
 }
