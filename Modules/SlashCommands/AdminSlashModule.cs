@@ -1,5 +1,6 @@
 using Discord;
 using Discord.Interactions;
+using Discord.Rest;
 using Discord.WebSocket;
 using DiscordBot.Attributes;
 using DiscordBot.Services;
@@ -84,6 +85,197 @@ public class AdminSlashModule : SlashCommandModule{
         await RespondAsync("Message sent! :white_check_mark:", ephemeral:true);
     }
 
+    //Role command group
+    [Group("role", "Manage server roles.")]
+    public class RoleSubGroup : SlashCommandModule{
+        public RoleSubGroup(IMongoDbService db, ILanguageManager langManager, ILogger<Bot> logger) : base(db, langManager, logger){}
+
+        [SlashCommand("create", "Create a new role.")]
+        public async Task RoleCreateCommandAsync(string name, string? color = "", [Summary(description:"Set to true if role should be displayed separately in the member list.")]bool hoist = false){
+            IRole? role = null;
+            try{
+                var _color  = string.IsNullOrWhiteSpace(color) ? Discord.Color.Default : new Discord.Color(uint.Parse(color));
+                role = await Context.Guild.CreateRoleAsync(name, color: _color, isHoisted: hoist);
+            }catch(Exception e){
+                _logger.LogError($"Exception happened while attempting to create a guild role: {e.Message}");
+                await RespondAsync($"Could not create custom role.", ephemeral: true);
+                return;
+            }
+            
+            _logger.LogInformation($"{DateTime.Now.ToShortTimeString()} - Role \"{role.Name}\" created in {Context.Guild.Name}.");
+            await RespondAsync($"Role {role.Mention} created!✅");
+
+
+            var modlogChannelId = _db.GetGuildSettingsAsync(Context.Guild.Id).Result.Modlog;
+            if (string.IsNullOrWhiteSpace(modlogChannelId))
+                return;
+            var modlogChannel = Context.Guild.GetChannel(ulong.Parse(modlogChannelId)) as IMessageChannel;
+            if (modlogChannel == null)
+                return;
+
+            var author = new EmbedAuthorBuilder(){
+                Name = Context.User.GlobalName,
+                IconUrl = Context.User.GetAvatarUrl()
+            };
+            var title = "Role Created";
+            var description = $"**Mention:** {role.Mention}\n**Hoisted**: {role.IsHoisted}\n**Created by:**{Context.User.Username}\n";
+            var modlog = new EmbedBuilder(){
+                Author = author,
+                Title = title,
+                Description = description,
+                Color = Discord.Color.Green,
+            }.WithCurrentTimestamp()
+            .Build();
+
+            await modlogChannel.SendMessageAsync("", embed: modlog);
+        }
+
+        [SlashCommand("delete", "Delete an existing role.")]
+        public async Task RoleDeleteCommandAsync(IRole role){
+            await role.DeleteAsync();
+            
+            _logger.LogInformation($"{DateTime.Now.ToShortTimeString()} - Role \"{role.Name}\" deleted in {Context.Guild.Name}.");
+            await RespondAsync($"Role {role.Mention} deleted.");
+
+
+            var modlogChannelId = _db.GetGuildSettingsAsync(Context.Guild.Id).Result.Modlog;
+            if (string.IsNullOrWhiteSpace(modlogChannelId))
+                return;
+            var modlogChannel = Context.Guild.GetChannel(ulong.Parse(modlogChannelId)) as IMessageChannel;
+            if (modlogChannel == null)
+                return;
+
+            var author = new EmbedAuthorBuilder(){
+                Name = Context.User.GlobalName,
+                IconUrl = Context.User.GetAvatarUrl()
+            };
+            var title = "Role Deleted";
+            var description = $"**Mention:** {role.Mention}\n**Hoisted**: {role.IsHoisted}\n**Deleted by:**{Context.User.Username}\n";
+            var modlog = new EmbedBuilder(){
+                Author = author,
+                Title = title,
+                Description = description,
+                Color = Discord.Color.Red,
+            }.WithCurrentTimestamp()
+            .Build();
+
+            await modlogChannel.SendMessageAsync("", embed: modlog);
+        }
+
+        [SlashCommand("assign", "Assign an existing role to a member.")]
+        public async Task RoleAssignCommandAsync(IGuildUser user, IRole role, uint? duration = null){
+            try{
+                await user.AddRoleAsync(role);
+            }catch(Exception e){
+                _logger.LogError($"{DateTime.Now.ToShortTimeString()} - Role \"{role.Name}\" could not be assigned to {user.Username} in {Context.Guild.Name}: {e.Message}.");
+                await RespondAsync($"Role {role.Mention} could not be assigned to {user.Mention}.", ephemeral: false);
+            }
+
+             _logger.LogInformation($"{DateTime.Now.ToShortTimeString()} - Role \"{role.Name}\" assigned to {user.Username} in {Context.Guild.Name}.");
+            await RespondAsync($"Role {role.Mention} assigned to {user.Mention}.");
+            var modlogChannelId = _db.GetGuildSettingsAsync(Context.Guild.Id).Result.Modlog;
+            if (string.IsNullOrWhiteSpace(modlogChannelId))
+                return;
+            var modlogChannel = Context.Guild.GetChannel(ulong.Parse(modlogChannelId)) as IMessageChannel;
+            if (modlogChannel == null)
+                return;
+
+            var author = new EmbedAuthorBuilder(){
+                Name = Context.User.GlobalName,
+                IconUrl = Context.User.GetAvatarUrl()
+            };
+            var thumbnailUrl = user.GetAvatarUrl();
+            var title = $"Role Assigned";
+            var description = $"**Role:** {role.Mention}\n**To:** {user.Mention}\n**Assigned by:** {Context.User.Username}\n";
+            var modlog = new EmbedBuilder(){
+                Author = author,
+                ThumbnailUrl = thumbnailUrl,
+                Title = title,
+                Description = description,
+                Color = Discord.Color.Green,
+            }.WithCurrentTimestamp()
+            .Build();
+
+            await modlogChannel.SendMessageAsync("", embed: modlog);
+        }
+
+        [SlashCommand("unassign", "Unassign a role from a member.")]
+        public async Task RoleUnassignCommandAsync(IGuildUser user, IRole role){
+            try{
+                await user.RemoveRoleAsync(role);
+            }catch(Exception e){
+                _logger.LogError($"{DateTime.Now.ToShortTimeString()} - Role \"{role.Name}\" could not be unassigned from {user.Username} in {Context.Guild.Name}: {e.Message}.");
+                await RespondAsync($"Role {role.Mention} could not be unassigned from {user.Mention}.", ephemeral: false);
+            }
+
+             _logger.LogInformation($"{DateTime.Now.ToShortTimeString()} - Role \"{role.Name}\" unassigned from {user.Username} in {Context.Guild.Name}.");
+            await RespondAsync($"Role {role.Mention} unassigned from {user.Mention}.");
+            var modlogChannelId = _db.GetGuildSettingsAsync(Context.Guild.Id).Result.Modlog;
+            if (string.IsNullOrWhiteSpace(modlogChannelId))
+                return;
+            var modlogChannel = Context.Guild.GetChannel(ulong.Parse(modlogChannelId)) as IMessageChannel;
+            if (modlogChannel == null)
+                return;
+
+            var author = new EmbedAuthorBuilder(){
+                Name = Context.User.GlobalName,
+                IconUrl = Context.User.GetAvatarUrl()
+            };
+            var thumbnailUrl = user.GetAvatarUrl();
+            var title = $"Role Unassigned";
+            var description = $"**Role:** {role.Mention}\n**From:** {user.Mention}\n**Unassigned by:** {Context.User.Username}\n";
+            var modlog = new EmbedBuilder(){
+                Author = author,
+                ThumbnailUrl = thumbnailUrl,
+                Title = title,
+                Description = description,
+                Color = Discord.Color.Red,
+            }.WithCurrentTimestamp()
+            .Build();
+
+            await modlogChannel.SendMessageAsync("", embed: modlog);
+        }
+
+        [SlashCommand("list", "Return a list of all roles in the server.")]
+        public async Task RoleListCommandAsync(){
+            var title = $"Roles List - {Context.Guild.Roles.Count} total";
+            var description = "";
+
+            foreach (var role in Context.Guild.Roles){
+                string roleInfo = $"* {role.Mention} - {role.Members.Count()} member(s)\n";
+                description.Concat(roleInfo);
+            }
+
+            var list = new EmbedBuilder(){
+                Title = title,
+                Description = description,
+                Color = Discord.Color.Blue,
+            }.WithCurrentTimestamp()
+            .Build();
+
+            await RespondAsync("", embed: list);
+        }
+
+        [SlashCommand("info", "View a role and its members.")]
+        public async Task RoleInfoCommandAsync(SocketRole role){
+            var title = $"{role.Mention} role - {role.Members.Count()} members";
+            var description = $"**Color:** {role.Color.ToString}\n**Hoisted:** {role.IsHoisted}\n**Mentionable:** {role.IsMentionable}\n**Position**: {role.Position}\n # Members\n";
+        
+            foreach (var member in role.Members){
+                description.Concat($"{member.Mention}\n");
+            }
+
+            var info = new EmbedBuilder(){
+                Title = title,
+                Description = description,
+                Color = Discord.Color.Blue,
+            }.WithCurrentTimestamp()
+            .Build();
+
+            await RespondAsync("", embed: info);
+        }
+    }
+
     //Moderation tools
     [SlashCommand("warn", "Send a warning to a member.")]
     public async Task WarnCommandAsync(IUser member, string reason = "",
@@ -110,17 +302,26 @@ public class AdminSlashModule : SlashCommandModule{
         await member.SendMessageAsync("", embed:warning);
         await RespondAsync("User has been warned. You can view all active warnings by using /warnings.", ephemeral:true);
 
-        var modlogChannel = await GetGuildModlogChannelAsync(Context.Guild);
+        //Log the warning action in a modlog channel, if one is set up.
+        var modlogChannelId = _db.GetGuildSettingsAsync(Context.Guild.Id).Result.Modlog;
+        if (string.IsNullOrWhiteSpace(modlogChannelId))
+            return;
+        //ChannelID is passed as a string so we need to convert it to ulong type
+        var modlogChannel = Context.Guild.GetChannel(ulong.Parse(modlogChannelId)) as IMessageChannel;
         if (modlogChannel == null)
             return;
 
-        var author = new EmbedAuthorBuilder(){
-                Name = Context.User.GlobalName,
-                IconUrl = Context.User.GetAvatarUrl()
-            };
         title = "Moderation Action";
         description = $"**Action Type:** Warning\n\n**Issued by:** {Context.User.Username}\n\n**Issued to**: {member.Username}\n\n**Reason:**\n{reason}";
-        await SendModlogAsync(modlogChannel, author: author, thumbnailUrl: thumbnailUrl, title: title, description: description, color: color);
+        var modlog = new EmbedBuilder(){
+            ThumbnailUrl = thumbnailUrl,
+            Title = title,
+            Description = description,
+            Color = color,
+        }.WithCurrentTimestamp()
+         .Build();
+
+        await modlogChannel.SendMessageAsync("", embed: modlog);
     }
 
     [SlashCommand("warnings", "View a list of all active warnings.")]
@@ -227,7 +428,12 @@ public class AdminSlashModule : SlashCommandModule{
             });
         }
 
-        var modlogChannel = await GetGuildModlogChannelAsync(Context.Guild);
+        //Log the mod action in a modlog channel, if one is set up.
+        var modlogChannelId = _db.GetGuildSettingsAsync(Context.Guild.Id).Result.Modlog;
+        if (string.IsNullOrWhiteSpace(modlogChannelId))
+            return;
+        //ChannelID is passed as a string so we need to convert it to ulong type
+        var modlogChannel = Context.Guild.GetChannel(ulong.Parse(modlogChannelId)) as IMessageChannel;
         if (modlogChannel == null)
             return;
 
@@ -238,7 +444,16 @@ public class AdminSlashModule : SlashCommandModule{
         title = "Moderation Action";
         description = $"**Action Type:** Mute\n\n**Issued by:** {Context.User.Username}\n\n**Issued to**: {member.Username}\n\n**Reason:**\n{reason}\n\n**Duration:** {(duration == 0 ? "Unspecified" : $"{duration} minutes")}";
         color = Discord.Color.Red;
-        await SendModlogAsync(modlogChannel, author: author, thumbnailUrl: thumbnailUrl, title: title, description: description, color: color);
+        var modlog = new EmbedBuilder(){
+            Author = author,
+            ThumbnailUrl = thumbnailUrl,
+            Title = title,
+            Description = description,
+            Color = color,
+        }.WithCurrentTimestamp()
+         .Build();
+
+        await modlogChannel.SendMessageAsync("", embed: modlog);
     }
 
     [SlashCommand("unmute", "Unmute a member")]
@@ -265,7 +480,12 @@ public class AdminSlashModule : SlashCommandModule{
         .Build();
         await member.SendMessageAsync("", embed: notice);
 
-        var modlogChannel = await GetGuildModlogChannelAsync(Context.Guild);
+        //Log the mod action in a modlog channel, if one is set up.
+        var modlogChannelId = _db.GetGuildSettingsAsync(Context.Guild.Id).Result.Modlog;
+        if (string.IsNullOrWhiteSpace(modlogChannelId))
+            return;
+        //ChannelID is passed as a string so we need to convert it to ulong type
+        var modlogChannel = Context.Guild.GetChannel(ulong.Parse(modlogChannelId)) as IMessageChannel;
         if (modlogChannel == null)
             return;
 
@@ -277,7 +497,16 @@ public class AdminSlashModule : SlashCommandModule{
         title = "Moderation Action";
         description = $"**Action Type:** Unmute\n\n**Issued by:** {Context.User.Username}\n\n**Issued to**: {member.Username}";
         color = Discord.Color.Red;
-        await SendModlogAsync(modlogChannel, author: author, thumbnailUrl: thumbnailUrl, title: title, description: description, color: color);
+        var modlog = new EmbedBuilder(){
+            Author = author,
+            ThumbnailUrl = thumbnailUrl,
+            Title = title,
+            Description = description,
+            Color = color,
+        }.WithCurrentTimestamp()
+         .Build();
+
+        await modlogChannel.SendMessageAsync("", embed: modlog);
     }
 
     [SlashCommand("kick", "Kick a member.")]
@@ -303,7 +532,12 @@ public class AdminSlashModule : SlashCommandModule{
         //THEN log the mod action
         await RespondAsync("Member has been kicked from the server.", ephemeral: true);
 
-        var modlogChannel = await GetGuildModlogChannelAsync(Context.Guild);
+        //Log the mod action in a modlog channel, if one is set up.
+        var modlogChannelId = _db.GetGuildSettingsAsync(Context.Guild.Id).Result.Modlog;
+        if (string.IsNullOrWhiteSpace(modlogChannelId))
+            return;
+        //ChannelID is passed as a string so we need to convert it to ulong type
+        var modlogChannel = Context.Guild.GetChannel(ulong.Parse(modlogChannelId)) as IMessageChannel;
         if (modlogChannel == null)
             return;
 
@@ -314,7 +548,17 @@ public class AdminSlashModule : SlashCommandModule{
         var thumbnailUrl = user.GetAvatarUrl();
         title = "Moderation Action";
         description = $"**Action Type:** Kick\n\n**Issued by:** {Context.User.Username}\n\n**Issued to**: {user.Username}\n\n**Reason:**\n{reason}";
-        await SendModlogAsync(modlogChannel, author: author, thumbnailUrl: thumbnailUrl, title: title, description: description, color: color);
+
+        var modlog = new EmbedBuilder(){
+            Author = author,
+            ThumbnailUrl = thumbnailUrl,
+            Title = title,
+            Description = description,
+            Color = color
+        }.WithCurrentTimestamp()
+        .Build();
+
+        await modlogChannel.SendMessageAsync("", embed: modlog);
     }
 
     [SlashCommand("ban", "Ban a member.")]
@@ -340,7 +584,12 @@ public class AdminSlashModule : SlashCommandModule{
         //then log the mod action
         await RespondAsync("Member has been banned from the server.", ephemeral: true);
 
-        var modlogChannel = await GetGuildModlogChannelAsync(Context.Guild);
+        //Log the mod action in a modlog channel, if one is set up.
+        var modlogChannelId = _db.GetGuildSettingsAsync(Context.Guild.Id).Result.Modlog;
+        if (string.IsNullOrWhiteSpace(modlogChannelId))
+            return;
+        //ChannelID is passed as a string so we need to convert it to ulong type
+        var modlogChannel = Context.Guild.GetChannel(ulong.Parse(modlogChannelId)) as IMessageChannel;
         if (modlogChannel == null)
             return;
 
@@ -351,7 +600,21 @@ public class AdminSlashModule : SlashCommandModule{
         var thumbnailUrl = user.GetAvatarUrl();
         title = "Moderation Action";
         description = $"**Action Type:** Ban\n\n**Issued by:** {Context.User.Username}\n\n**Issued to**: {user.Username}\n\n**Reason:**\n{reason}";
-        await SendModlogAsync(modlogChannel, author: author, thumbnailUrl: thumbnailUrl, title: title, description: description, color: color);
+
+        var modlog = new EmbedBuilder(){
+            Author = author,
+            ThumbnailUrl = thumbnailUrl,
+            Title = title,
+            Description = description,
+            Color = color
+        }.WithCurrentTimestamp()
+        .Build();
+
+        await modlogChannel.SendMessageAsync("", embed: modlog);
     }
 
+    // [SlashCommand("unban", "Unban a member")]
+    // public async Task UnbanCommandAsync(ulong id){
+
+    // }
 }
