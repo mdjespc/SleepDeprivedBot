@@ -46,27 +46,27 @@ Veuillez choisir une langue pour ce serveur.";
         [SlashCommand("channel", "Set up a welcome channel for new members.")]
         public async Task WelcomeChannelCommandAsync(ITextChannel channel){
             await _db.SetGuildSettingsAsync(Context.Guild.Id, "welcomeChannel", channel.Id.ToString());
-            await RespondAsync("Welcome channel set!", ephemeral:true);
+            await RespondAsync("Welcome channel set!", ephemeral:false);
         }
 
         [SlashCommand("off", "Disable welcome messages.")]
         public async Task WelcomeOffCommandAsync(){
             await _db.SetGuildSettingsAsync(Context.Guild.Id, "welcomeMessage", "");
-            await RespondAsync("Welcome channel disabled.", ephemeral:true);
+            await RespondAsync("Welcome channel disabled.", ephemeral:false);
         }
 
         [SlashCommand("message", "Set up a welcome message for new members.")]
         public async Task WelcomeMessageCommandAsync(string message){
             //TODO '@u' literals will be replaced with the user name
             await _db.SetGuildSettingsAsync(Context.Guild.Id, "welcomeMessage", message);
-            await RespondAsync("Welcome message set!", ephemeral:true);
+            await RespondAsync("Welcome message set!", ephemeral:false);
         }
     }
 
     [SlashCommand("modlog", "Set up a moderation log channel.")]
     public async Task ModlogCommandAsync(ITextChannel channel){
         await _db.SetGuildSettingsAsync(Context.Guild.Id, "modlog", channel.Id.ToString());
-        await RespondAsync("Modlog enabled.", ephemeral:true);
+        await RespondAsync("Modlog enabled.", ephemeral:false);
     }
 
     //Setup Module Interaction Components

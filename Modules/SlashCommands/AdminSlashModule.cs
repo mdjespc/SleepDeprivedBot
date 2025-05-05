@@ -102,7 +102,7 @@ public class AdminSlashModule : SlashCommandModule{
                 return;
             }
             
-            _logger.LogInformation($"{DateTime.Now.ToShortTimeString()} - Role \"{role.Name}\" created in {Context.Guild.Name}.");
+            //_logger.LogInformation($"{DateTime.Now.ToShortTimeString()} - Role \"{role.Name}\" created in {Context.Guild.Name}.");
             await RespondAsync($"Role {role.Mention} created!✅");
 
 
@@ -118,7 +118,7 @@ public class AdminSlashModule : SlashCommandModule{
                 IconUrl = Context.User.GetAvatarUrl()
             };
             var title = "Role Created";
-            var description = $"**Mention:** {role.Mention}\n**Hoisted**: {role.IsHoisted}\n**Created by:**{Context.User.Username}\n";
+            var description = $"**Mention:** {role.Mention}\n**Hoisted**: {role.IsHoisted}\n**Created by:** {Context.User.Username}\n";
             var modlog = new EmbedBuilder(){
                 Author = author,
                 Title = title,
@@ -132,10 +132,11 @@ public class AdminSlashModule : SlashCommandModule{
 
         [SlashCommand("delete", "Delete an existing role.")]
         public async Task RoleDeleteCommandAsync(IRole role){
+            var name = role.Name;
             await role.DeleteAsync();
             
-            _logger.LogInformation($"{DateTime.Now.ToShortTimeString()} - Role \"{role.Name}\" deleted in {Context.Guild.Name}.");
-            await RespondAsync($"Role {role.Mention} deleted.");
+            //_logger.LogInformation($"{DateTime.Now.ToShortTimeString()} - Role \"{role.Name}\" deleted in {Context.Guild.Name}.");
+            await RespondAsync($"Role {name} deleted.");
 
 
             var modlogChannelId = _db.GetGuildSettingsAsync(Context.Guild.Id).Result.Modlog;
@@ -150,7 +151,7 @@ public class AdminSlashModule : SlashCommandModule{
                 IconUrl = Context.User.GetAvatarUrl()
             };
             var title = "Role Deleted";
-            var description = $"**Mention:** {role.Mention}\n**Hoisted**: {role.IsHoisted}\n**Deleted by:**{Context.User.Username}\n";
+            var description = $"**Name:** {name}\n**Hoisted**: {role.IsHoisted}\n**Deleted by:** {Context.User.Username}\n";
             var modlog = new EmbedBuilder(){
                 Author = author,
                 Title = title,
@@ -243,7 +244,7 @@ public class AdminSlashModule : SlashCommandModule{
 
             foreach (var role in Context.Guild.Roles){
                 string roleInfo = $"* {role.Mention} - {role.Members.Count()} member(s)\n";
-                description.Concat(roleInfo);
+                description = description + roleInfo;
             }
 
             var list = new EmbedBuilder(){
@@ -258,11 +259,11 @@ public class AdminSlashModule : SlashCommandModule{
 
         [SlashCommand("info", "View a role and its members.")]
         public async Task RoleInfoCommandAsync(SocketRole role){
-            var title = $"{role.Mention} role - {role.Members.Count()} members";
-            var description = $"**Color:** {role.Color.ToString}\n**Hoisted:** {role.IsHoisted}\n**Mentionable:** {role.IsMentionable}\n**Position**: {role.Position}\n # Members\n";
+            var title = $"{role.Name} role";
+            var description = $"**Mention**:{role.Mention}\n**Members:** {role.Members.Count()} member(s)\n**Color:** {role.Color.ToString}\n**Hoisted:** {role.IsHoisted}\n**Mentionable:** {role.IsMentionable}\n**Position**: {role.Position}\n\n**Members**\n\n";
         
             foreach (var member in role.Members){
-                description.Concat($"{member.Mention}\n");
+                description = description + $"{member.Mention}\n";
             }
 
             var info = new EmbedBuilder(){

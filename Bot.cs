@@ -39,7 +39,7 @@ namespace DiscordBot{
 
             //Initialize a DiscordSocketClient object that maintains communication between the bot and a server with the specified configuration.
             DiscordSocketConfig clientConfiguration = new (){
-                GatewayIntents = GatewayIntents.AllUnprivileged | GatewayIntents.MessageContent,
+                GatewayIntents = GatewayIntents.AllUnprivileged | GatewayIntents.MessageContent | GatewayIntents.GuildPresences | GatewayIntents.GuildMembers,
                 MessageCacheSize = 100
             };
             _client = new DiscordSocketClient(clientConfiguration);
@@ -380,7 +380,7 @@ namespace DiscordBot{
 
             if (welcomeChannel != null){
                 var message = _db.GetGuildSettingsAsync(user.Guild.Id).Result.WelcomeMessage;
-                message = string.IsNullOrWhiteSpace(message) ? $"**{user.GlobalName}** just joined!" : FormatMessage(message);
+                message = string.IsNullOrWhiteSpace(message) ? $"**{user.Mention}** just joined!" : FormatMessage(message, user);
                 await welcomeChannel.SendMessageAsync(message);
             }
 
@@ -589,7 +589,7 @@ namespace DiscordBot{
                     continue;
                 
                 if (_.Equals("@u") && user != null)
-                    message = message.Replace(_, $"**{user.GlobalName}**");
+                    message = message.Replace(_, $"**{user.Mention}**");
             }
 
             return message;
