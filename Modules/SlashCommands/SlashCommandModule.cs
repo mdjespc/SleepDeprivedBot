@@ -29,8 +29,8 @@ public class SlashCommandModule : InteractionModuleBase<SocketInteractionContext
         Gold
     }
 
-    public async Task<IMessageChannel?> GetGuildModlogChannelAsync(IGuild guild){
-        var settings = await _db.GetGuildSettingsAsync(guild.Id);
+    public IMessageChannel? GetGuildModlogChannelAsync(IGuild guild){
+        var settings = _db.GetGuildSettingsAsync(guild.Id).Result;
         if (string.IsNullOrWhiteSpace(settings.Modlog))
             return null;
         //ChannelID is stored in db as a string so we need to convert it to ulong type

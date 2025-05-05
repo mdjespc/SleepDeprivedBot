@@ -318,7 +318,7 @@ namespace DiscordBot{
                 return;
 
             var title = "Role Created";
-            var description = $"**Mention:** {role.Mention}\n**Color:** {role.Color.ToString}\n**Hoisted:** {role.IsHoisted}\n**Mentionable:**{role.IsMentionable}\n**Position:**{role.Position}\n**ID:**{role.Id}";
+            var description = $"**Mention:** {role.Mention}\n**Color:** {role.Color.ToString}\n**Hoisted:** {role.IsHoisted}\n**Mentionable:** {role.IsMentionable}\n**Position:** {role.Position}\n**ID:**{role.Id}";
             var color = Color.Green;
             var log = new EmbedBuilder(){
                 Title = title,
@@ -360,7 +360,7 @@ namespace DiscordBot{
                 return;
 
             var title = "Role Deleted";
-            var description = $"**Mention:** {role.Mention}\n**Color:** {role.Color.ToString}\n**Hoisted:** {role.IsHoisted}\n**Mentionable:**{role.IsMentionable}\n**Position:**{role.Position}\n**ID:**{role.Id}";
+            var description = $"**Mention:** {role.Mention}\n**Color:** {role.Color.ToString}\n**Hoisted:** {role.IsHoisted}\n**Mentionable:** {role.IsMentionable}\n**Position:** {role.Position}\n**ID:** {role.Id}";
             var color = Color.Red;
             var log = new EmbedBuilder(){
                 Title = title,
