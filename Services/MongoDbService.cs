@@ -1,5 +1,6 @@
+using Discord;
 using Microsoft.Extensions.Configuration;
-
+using MongoDB.Bson;
 using MongoDB.Driver;
 
 namespace DiscordBot.Services{
@@ -23,7 +24,10 @@ namespace DiscordBot.Services{
 
         //Instance fields of Collection type
         public IMongoCollection<GuildSettingsModel> Guilds => _database.GetCollection<GuildSettingsModel>("guilds");
+        public IMongoCollection<GuildUserModel> GuildUsers => _database.GetCollection<GuildUserModel>("users");
+        public IMongoCollection<WarningModel> Warnings => _database.GetCollection<WarningModel>("warnings");
 
+        //Guild Ops
         public async Task SetGuildSettingsAsync(ulong guildId, string key, string value){
             var filter = Builders<GuildSettingsModel>.Filter.Eq(_ => _.GuildId, guildId);
 
@@ -55,10 +59,83 @@ namespace DiscordBot.Services{
                 settings = new GuildSettingsModel{GuildId = guildId};
                 await Guilds.InsertOneAsync(settings);
 
-                Console.WriteLine($"`discordbot.guilds`: Guild Settings for Guild {guildId} were not found in the database. A new document for this guild has been added.");
+                Console.WriteLine($"discordbot.guilds: Guild Settings for Guild {guildId} were not found in the database. A new document for this guild has been added.");
             }
 
             return settings;
+        }
+
+        // User Operations
+        public async Task CreateGuildUserAsync(IGuildUser user){
+            var document = new GuildUserModel{UserId = user.Id,
+                                              Username = user.Username,
+                                              GuildId = user.GuildId,
+                                              GuildName = user.Guild.Name,
+            };
+
+            await GuildUsers.InsertOneAsync(document);
+
+            Console.WriteLine($"discordbot.users: A new document for {document.Username} has been added.");
+        }
+
+        public async Task<GuildUserModel?> GetGuildUserAsync(IGuildUser user){
+            var document = await GuildUsers.Find(_ => _.UserId == user.Id && _.GuildId == user.GuildId).FirstOrDefaultAsync();
+            return document;
+        }
+
+        //public async Task UpdateGuildUserAsync(IGuildUser user, int? level = null, int? experience = null, int? currency = null){}
+
+        public async Task DeleteGuildUserAsync(IGuildUser user){
+            var userId = user.Id;
+            var guildId = user.GuildId;
+            var filter = Builders<GuildUserModel>.Filter.And(
+                Builders<GuildUserModel>.Filter.Eq(_ => _.UserId, userId),
+                Builders<GuildUserModel>.Filter.Eq(_ => _.GuildId, guildId)
+            );
+            
+            await GuildUsers.DeleteOneAsync(filter);
+        }
+
+        // Warning Ops
+        public async Task CreateWarningAsync(IGuildUser user, string? reason = null, double duration = 0){
+            var document = new WarningModel{UserId = user.Id,
+                                            Username = user.Username,
+                                            GuildId = user.GuildId,
+                                            GuildName = user.Guild.Name,
+                                            Reason = reason ?? "No reason given",
+                                            Created = new BsonDateTime(DateTime.UtcNow),
+                                            Expires = duration == 0 ? null : new BsonDateTime(DateTime.UtcNow.AddDays(duration))
+            };
+
+            await Warnings.InsertOneAsync(document);
+            Console.WriteLine($"discordbot.warnings: A new document for {document.Username} has been added.");
+        }
+
+        public async Task<List<WarningModel>?> GetWarningsAsync(IGuildUser user){
+            var warnings = await Warnings.Find(_ => _.UserId == user.Id && _.GuildId == user.GuildId).ToListAsync();
+            return warnings;
+        }
+
+        //public async Task UpdateWarningAsync(IGuildUser user, string? reason = null, int? duration = null){}
+
+        public async Task DeleteWarningAsync(string id){
+            var filter = Builders<WarningModel>.Filter.Eq(_ => _.Id, id);
+            await Warnings.DeleteOneAsync(filter);
+        }
+
+        public async Task ClearWarningsAsync(IGuildUser user){
+            var warnings = await GetWarningsAsync(user);
+            if (warnings == null){
+                return;
+            }
+
+            foreach(var warning in warnings){
+                if (warning.Id == null)
+                    continue;
+                await DeleteWarningAsync(warning.Id);
+            }
+
+            Console.WriteLine($"discordbot.warnings: Warnings cleared for {user.Username} in {user.Guild.Name}.");
         }
     }
 }

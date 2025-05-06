@@ -1,18 +1,24 @@
 using MongoDB.Bson;
 using MongoDB.Bson.Serialization.Attributes;
 
-public class UserModel
+public class GuildUserModel
 {
     #pragma warning disable CS8618
     [BsonId]
     [BsonRepresentation(BsonType.ObjectId)]
-    public string Id { get; set; }
+    public string? Id { get; set; }
 
     [BsonElement("userId")]
     public ulong? UserId { get; set; }
 
-    [BsonElement("discriminator")]
-    public string? Discriminator { get; set; }
+    [BsonElement("username")]
+    public string? Username { get; set; }
+
+    [BsonElement("guildId")]
+    public ulong? GuildId { get; set;}
+
+    [BsonElement("guildName")]
+    public string? GuildName { get; set; }
 
     [BsonElement("level")]
     public int Level { get; set; } = 1;
