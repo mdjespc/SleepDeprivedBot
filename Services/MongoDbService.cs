@@ -111,8 +111,13 @@ namespace DiscordBot.Services{
             Console.WriteLine($"discordbot.warnings: A new document for {document.Username} has been added.");
         }
 
-        public async Task<List<WarningModel>?> GetWarningsAsync(IGuildUser user){
+        public async Task<List<WarningModel>?> GetUserWarningsAsync(IGuildUser user){
             var warnings = await Warnings.Find(_ => _.UserId == user.Id && _.GuildId == user.GuildId).ToListAsync();
+            return warnings;
+        }
+
+        public async Task<List<WarningModel>?> GetGuildWarningsAsync(IGuild guild){
+            var warnings = await Warnings.Find(_ => _.GuildId == guild.Id).ToListAsync();
             return warnings;
         }
 
@@ -124,7 +129,7 @@ namespace DiscordBot.Services{
         }
 
         public async Task ClearWarningsAsync(IGuildUser user){
-            var warnings = await GetWarningsAsync(user);
+            var warnings = await GetUserWarningsAsync(user);
             if (warnings == null){
                 return;
             }

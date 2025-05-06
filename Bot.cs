@@ -250,8 +250,8 @@ namespace DiscordBot{
                 Name = message.Author.Username,
                 IconUrl = message.Author.GetAvatarUrl()
             };
-            var title = $"Message Edited in #{_channel}";
-            var description = $"**From**\n{oldContent}\n**To**\n{content}";
+            var title = $"Message Edited";
+            var description = $"In <#{_channel.Id}>\n\n**From**\n{oldContent}\n\n**To**\n{content}";
             var color = Color.Blue;
             var log = new EmbedBuilder(){
                 Author = author,
@@ -295,8 +295,8 @@ namespace DiscordBot{
                 Name = _author.Username,
                 IconUrl = _author.GetAvatarUrl()
             };
-            var title = $"Message Deleted in #{_channel}";
-            var description = $"**Content**\n{_content}";
+            var title = $"Message Deleted";
+            var description = $"In <#{_channel.Id}>\n\n**Content**\n\n{_content}";
             var color = Color.Red;
             var log = new EmbedBuilder(){
                 Author = author,

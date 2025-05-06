@@ -8,13 +8,13 @@ public class WarningModel{
     public string? Id { get; set; }
 
     [BsonElement("userId")]
-    public ulong? UserId { get; set; }
+    public ulong UserId { get; set; }
 
     [BsonElement("username")]
     public string? Username { get ; set; }
 
     [BsonElement("guildId")]
-    public ulong? GuildId { get; set; }
+    public ulong GuildId { get; set; }
 
     [BsonElement("guildName")]
     public string? GuildName { get; set; }
@@ -23,7 +23,7 @@ public class WarningModel{
     public string? Reason { get; set; }
 
     [BsonElement("created")]
-    public BsonDateTime? Created { get; set; }
+    public required BsonDateTime Created { get; set; }
 
     [BsonElement("expires")]
     public BsonDateTime? Expires { get; set; }

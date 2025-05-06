@@ -279,13 +279,18 @@ public class AdminSlashModule : SlashCommandModule{
 
     //Moderation tools
     [SlashCommand("warn", "Send a warning to a member.")]
-    public async Task WarnCommandAsync(IUser member, string reason = "",
+    public async Task WarnCommandAsync(IGuildUser member, string reason = "",
     [Summary(description:"Channel to send the warning to. Leaving this blank will only send the warning to the member's DMs.")]ITextChannel? channel = null){
-        reason = string.IsNullOrWhiteSpace(reason) ? "No reason given." : reason;
+        reason = string.IsNullOrWhiteSpace(reason) ? "No reason given" : reason;
+
+        await _db.CreateWarningAsync(member, reason);
+
+        var warnings = await _db.GetUserWarningsAsync(member);
+        var warningCount = (warnings == null || warnings.Count == 0) ? "N/A" : warnings.Count.ToString();
 
         var thumbnailUrl = member.GetAvatarUrl();
         string title = "Warning";
-        string description = $"You have received a warning from the {Context.Guild.Name} moderation team.\n\n**Reason:**\n{reason}\n\n\nYou now have N/A active warnings.";
+        string description = $"You have received a warning from the {Context.Guild.Name} moderation team.\n\n**Reason:**\n{reason}\n\n\nYou now have {warningCount} active warnings.";
         var color = Discord.Color.Orange;
 
         EmbedBuilder embedBuilder = new EmbedBuilder(){
@@ -325,12 +330,51 @@ public class AdminSlashModule : SlashCommandModule{
         await modlogChannel.SendMessageAsync("", embed: modlog);
     }
 
-    [SlashCommand("warnings", "View a list of all active warnings.")]
-    public async Task WarningsCommandAsync(){
-        await RespondAsync("Coming soon!");
+    [Group("warnings", "Manage warnings.")]
+    public class WarningsSubGroup : SlashCommandModule{
+        public WarningsSubGroup(IMongoDbService db, ILanguageManager langManager, ILogger<Bot> logger) : base(db, langManager, logger){}
+
+        [SlashCommand("all", "View a list of all active warnings.")]
+        public async Task WarningsAllCommandAsync(){
+            var warnings = await _db.GetGuildWarningsAsync(Context.Guild);
+            if (warnings == null || warnings.Count == 0){
+                var embed = new EmbedBuilder(){
+                    Title = "No active warnings found."
+                }.WithCurrentTimestamp()
+                .Build();
+                await RespondAsync("", embed: embed);
+                return;
+            }
+
+            var title = $"{warnings.Count} active warnings found";
+            var description = "";
+            foreach (var warning in warnings){
+                description = description + $"* {Context.Guild.GetUser(warning.UserId).Mention}\n**Created:** {warning.Created.AsLocalTime}\n**Reason:** {warning.Reason}\n";
+            }
+
+            var embeddedWarnings = new EmbedBuilder(){
+                    Title = title,
+                    Description = description,
+                    Color = Discord.Color.Orange
+                }.WithCurrentTimestamp()
+                .Build();
+            await RespondAsync("", embed: embeddedWarnings);
+        }
+
+        [SlashCommand("clear", "Clear a given member's active warnings.")]
+        public async Task WarningsClearCommandAsync(IGuildUser member){
+            var warnings = await _db.GetUserWarningsAsync(member);
+            if (warnings == null || warnings.Count == 0){
+                await RespondAsync("Member does not have any active warnings.", ephemeral: true);
+                return;
+            }
+
+            await _db.ClearWarningsAsync(member);
+            await RespondAsync($"{member.Mention}'s warnings have been cleared.");
+        }
+
     }
-
-
+    
     [SlashCommand("mute", "Mute a member")]
     public async Task MuteCommandAsync(IGuildUser member, [Summary(description:"Duration in minutes. Defaults to zero (indefinitely).")]int duration = 0, string reason = ""){
         //Create a "Muted" role if it does not yet exist
