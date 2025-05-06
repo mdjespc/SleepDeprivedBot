@@ -228,6 +228,8 @@ namespace DiscordBot{
 
 
         private async Task OnMessageUpdatedAsync(Cacheable<IMessage, ulong> oldMessage, SocketMessage message, ISocketMessageChannel channel){
+            if (message.Author.IsBot)
+                return;
             if (!oldMessage.HasValue){
                 _logger.LogWarning("A message was updated, but bot was unable to retrieve its cached content data.");
                 return;
@@ -274,6 +276,8 @@ namespace DiscordBot{
                 return;
             }
             var _author = message.Value.Author;
+            if (_author.IsBot)
+                return;
             var _content = message.Value.Content;
             var _channel = message.Value.Channel as IGuildChannel ?? throw new Exception("Could not retrieve guild data from deleted message");
             var _guild = (SocketGuild) _channel.Guild;
