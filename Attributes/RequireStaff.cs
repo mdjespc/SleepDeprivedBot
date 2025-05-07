@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 
 namespace InteractionFramework.Attributes;
 
-public class RequireAdminOrOwnerAttribute : PreconditionAttribute{
+public class RequireStaffAttribute : PreconditionAttribute{
 
     public override async Task<PreconditionResult> CheckRequirementsAsync(IInteractionContext context, ICommandInfo command, IServiceProvider services)
     {
@@ -13,7 +13,7 @@ public class RequireAdminOrOwnerAttribute : PreconditionAttribute{
         var _ownerId = application.Owner.Id;
         var user = (IGuildUser) context.User;
         
-        if (user.GuildPermissions.Administrator || user.GuildPermissions.BanMembers || user.Id == _ownerId)
+        if (user.GuildPermissions.Administrator || user.GuildPermissions.ModerateMembers || user.Id == _ownerId)
             return PreconditionResult.FromSuccess();
 
         return PreconditionResult.FromError("You must be an admin or the bot owner.");
