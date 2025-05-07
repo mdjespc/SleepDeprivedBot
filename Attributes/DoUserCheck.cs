@@ -4,7 +4,7 @@ using Discord.WebSocket;
 using System;
 using System.Threading.Tasks;
 
-namespace DiscordBot.Attributes;
+namespace InteractionFramework.Attributes;
 
 internal class DoUserCheckAttribute : PreconditionAttribute{
     public override Task<PreconditionResult> CheckRequirementsAsync(IInteractionContext context, ICommandInfo commandInfo, IServiceProvider services){

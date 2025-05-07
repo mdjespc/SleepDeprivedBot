@@ -2,7 +2,6 @@ using Discord;
 using Discord.Interactions;
 using Discord.Rest;
 using Discord.WebSocket;
-using DiscordBot.Attributes;
 using DiscordBot.Services;
 using InteractionFramework.Attributes;
 using Microsoft.Extensions.Logging;
