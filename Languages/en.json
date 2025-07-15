@@ -1,5 +1,25 @@
 {
     "announce_info":"**announce** <channel> <message> - Sends an announcement.",
+    "help embed":"**embed** <channel> <title> <description> [color] - Sends an embedded message to the target channel.",
+    "help message": "**message** <channel> <message> Sends a text message to the target channel",
+
+    "help role create": "**role create** <name> [color] [hoist] - Creates a new role.",
+    "help role delete": "**role delete** <role> - Deletes an existing role.",
+    "help role assign": "**role assign** <member> <role> [duration] - Assign an existing role to a member.",
+    "help role unassign": "**role unassign** <member> <role> - Unassign a role from a member.",
+    "help role list": "**role list** - Return a list of all roles in the server.",
+    "help role info": "**role info** <role> - View a role and its members",
+
+    "help warn": "**warn** <member> [reason] [channel] - Send a warning to a member.",
+    "help warnings all": "**warnings all** - View all active warnings.",
+    "help warnings clear": "**warnings clear** <member> - Clear a given member's active warnings.",
+
+    "help mute": "**mute** <member> [duration] [reason] - Mute a member.",
+    "help unmute": "**unmute** <member> - Unmute a member.",
+
+    "help kick": "**kick** <member> [reason] - Kick a member.",
+    "help ban": "**ban** <member> [reason] - Ban a member.",
+    
     "bitrate_info":"**bitrate** <channel> - Returns the bitrate of a voice channel.",
     "ping_info":"**ping** - Pings the bot and returns its latency.",
     "sm_info":"**sm** <channel> <message> - Sends a message.",

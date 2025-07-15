@@ -1,9 +1,29 @@
 {    
-    "announce_info":"**announce** <channel> <message> - Envía un anuncio.",
-    "bitrate_info":"**bitrate** <channel> - Devuelve la tasa de bits de un canal de voz.",
+    "announce_info":"**announce** <canal> <mensaje> - Envía un anuncio.",
+    "help embed":"**embed** <canal> <título> <descripción> [color] - Envía un mensaje incrustado al canal dado.",
+    "help message": "**message** <canal> <mensaje> Envía un mensaje de texto al canal dado.",
+
+    "help role create": "**role create** <nombre> [color] [izar] - Crea un nuevo rol.",
+    "help role delete": "**role delete** <rol> - Borra un rol existente.",
+    "help role assign": "**role assign** <miembro> <rol> [duración] - Le asigna un rol existente al miembro dado.",
+    "help role unassign": "**role unassign** <miembro> <rol> - Le remueve un rol al miembro dado.",
+    "help role list": "**role list** - Muestra una lista de todos los roles en el servidor.",
+    "help role info": "**role info** <rol> - Muestra los detalles y los miembros de un rol.",
+
+    "help warn": "**warn** <miembro> [razón] [canal] - Alerta a un miembro.",
+    "help warnings all": "**warnings all** - Muestra todas las alertas activas.",
+    "help warnings clear": "**warnings clear** <miembro> - Despeja todas las alertas activas de un miembro.",
+
+    "help mute": "**mute** <miembro> [duración] [razón] - Silencia a un miembro.",
+    "help unmute": "**unmute** <miembro> - Desenmudece a un miembro.",
+
+    "help kick": "**kick** <miembro> [razón] - Bota a un miembro.",
+    "help ban": "**ban** <miembro> [razón] - Veta a un miembro.",
+
+    "bitrate_info":"**bitrate** <canal> - Devuelve la tasa de bits de un canal de voz.",
     "ping_info":"**ping** - Envía una señal al bot y calcula su latencia.",
-    "sm_info":"**sm** <channel> <message> - Envía un mensaje.",
-    "se_info":"**se** <channel> <embed> - Envía un mensaje incrustado.",
+    "sm_info":"**sm** <canal> <message> - Envía un mensaje.",
+    "se_info":"**se** <canal> <embed> - Envía un mensaje incrustado.",
     "echo_info":"**echo** <phrase> - Repite un mensaje.",
     "help_info":"**help** - Muestra todos los comandos.",
     "kalek_info":"**kalek** - Halaga a Kalek.",
