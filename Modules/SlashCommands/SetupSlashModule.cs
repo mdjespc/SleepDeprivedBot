@@ -1,6 +1,5 @@
 using Discord;
 using Discord.Interactions;
-using DiscordBot.Attributes;
 using DiscordBot.Services;
 using Microsoft.Extensions.Logging;
 //using DiscordBot.Attributes;
