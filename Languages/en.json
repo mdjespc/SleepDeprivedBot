@@ -1,6 +1,6 @@
 {
-    "announce_info":"**announce** <channel> <message> - Sends an announcement.",
-    "help embed":"**embed** <channel> <title> <description> [color] - Sends an embedded message to the target channel.",
+    "help announce": "**announce** <channel> <message> - Sends an announcement.",
+    "help embed": "**embed** <channel> <title> <description> [color] - Sends an embedded message to the target channel.",
     "help message": "**message** <channel> <message> Sends a text message to the target channel",
 
     "help role create": "**role create** <name> [color] [hoist] - Creates a new role.",
@@ -19,15 +19,15 @@
 
     "help kick": "**kick** <member> [reason] - Kick a member.",
     "help ban": "**ban** <member> [reason] - Ban a member.",
-    
-    "bitrate_info":"**bitrate** <channel> - Returns the bitrate of a voice channel.",
-    "ping_info":"**ping** - Pings the bot and returns its latency.",
-    "sm_info":"**sm** <channel> <message> - Sends a message.",
-    "se_info":"**se** <channel> <embed> - Sends an embedded message.",
-    "echo_info":"**echo** <phrase> - Echoes a message.",
-    "help_info":"**help** - Lists all commands.",
-    "kalek_info":"**kalek** - Praises Kalek.",
-    "ping_command":"The current latency is {0}ms. That's how long it took me to respond to you! :ping_pong:",
-    "bitrate_command":"{0} has a bitrate of {1} bits per second.",
-    "setup_followup": "✅ Setup complete! You can change settings anytime using `/setup`."
+
+    "help bitrate": "**bitrate** <channel> - Returns the bitrate of a voice channel.",
+    "reply bitrate": "{0} has a bitrate of {1} bits per second.",
+
+    "help ping": "**ping** - Pings the bot and returns its latency.",
+    "reply ping": "The current latency is {0}ms. That's how long it took me to respond to you! :ping_pong:",
+
+    "help echo": "**echo** <phrase> - Echoes a message.",
+    "help help": "**help** - Lists all commands.",
+
+    "reply setup": "✅ Setup complete! You can change settings anytime using `/setup`."
 }

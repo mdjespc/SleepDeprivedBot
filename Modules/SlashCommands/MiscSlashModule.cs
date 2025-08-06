@@ -32,14 +32,27 @@ public class MiscSlashModule : SlashCommandModule{
     public async Task HelpCommandAsync(){
         var settings = await _db.GetGuildSettingsAsync(Context.Guild.Id);
         var lang = settings.Language;
-        string[] infoStringKeys = {
-        "announce_info",
-        "bitrate_info",
-        "ping_info",
-        "sm_info",
-        "se_info",
-        "echo_info",
-        "help_info",
+        string[] infoStringKeys = { //TODO Deserialize JSON and filter by key value starting with "help". 
+        "help announce",
+        "help embed",
+        "help message",
+        "help role create",
+        "help role delete",
+        "help role assign",
+        "help role unassign",
+        "help role list",
+        "help role info",
+        "help warn",
+        "help warnings all",
+        "help warnings clear",
+        "help mute",
+        "help unmute",
+        "help kick",
+        "help ban",
+        "help bitrate",
+        "help ping",
+        "help echo",
+        "help help",
         };
 
         var infoStringValues = infoStringKeys.Select(_ => _langManager.GetString(_, lang));

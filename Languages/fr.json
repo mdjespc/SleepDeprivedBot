@@ -1,13 +1,33 @@
-{    
-    "announce_info":"**announce** <channel> <message> - Envoyer une annonce.",
-    "bitrate_info":"**bitrate** <channel> - Montrer le débit binaire d'un canal vocal.",
-    "ping_info":"**ping** - Envoyer un signal au bot et montrer sa latence.",
-    "sm_info":"**sm** <channel> <message> - Envoyer un message.",
-    "se_info":"**se** <channel> <embed> - Envoyer un message intégré.",
-    "echo_info":"**echo** <phrase> - Répéter un message.",
-    "help_info":"**help** - Montrer toutes les commandes.",
-    "kalek_info":"**kalek** - Flatter Kalek.",
-    "ping_command":"La latence actuelle est de {0}ms. C'est le temps qu'il m'a fallu pour te répondre! :ping_pong:",
-    "bitrate_command":"{0} a un débit binaire de {1} bits par seconde.",
-    "setup_followup": "✅ Configuration terminée! Vous pouvez modifier les paramètres à tout moment via `/setup`."
+{
+    "help announce": "**announce** <channel> <message> - Envoyer une annonce.",
+    "help embed": "**embed** <channel> <titre> <description> [couleur] - Envoie un message intégré au canal cible.",
+    "help message": "**message** <channel> <message> Envoie un message texte au canal ciblé.",
+
+    "help role create": "**role create** <nom> [couleur] [afficher] - Crée un nouveau rôle.",
+    "help role delete": "**role delete** <rôle> - Supprime un rôle existant.",
+    "help role assign": "**role assign** <membre> <rôle> [durée] - Assigne un rôle existant à un membre.",
+    "help role unassign": "**role unassign** <membre> <rôle> - Retire un rôle d’un membre.",
+    "help role list": "**role list** - Affiche la liste de tous les rôles du serveur.",
+    "help role info": "**role info** <rôle> - Affiche les détails et les membres d’un rôle.",
+
+    "help warn": "**warn** <membre> [raison] [canal] - Envoie un avertissement à un membre.",
+    "help warnings all": "**warnings all** - Affiche tous les avertissements actifs.",
+    "help warnings clear": "**warnings clear** <membre> - Supprime les avertissements actifs d’un membre.",
+
+    "help mute": "**mute** <membre> [durée] [raison] - Rend muet un membre.",
+    "help unmute": "**unmute** <membre> - Rétablit la voix d’un membre.",
+
+    "help kick": "**kick** <membre> [raison] - Expulse un membre.",
+    "help ban": "**ban** <membre> [raison] - Bannit un membre.",
+
+    "help bitrate": "**bitrate** <channel> - Montrer le débit binaire d'un canal vocal.",
+    "reply bitrate": "{0} a un débit binaire de {1} bits par seconde.",
+
+    "help ping": "**ping** - Envoyer un signal au bot et montrer sa latence.",
+    "reply ping": "La latence actuelle est de {0}ms. C'est le temps qu'il m'a fallu pour te répondre! :ping_pong:",
+
+    "help echo": "**echo** <phrase> - Répéter un message.",
+    "help help": "**help** - Montrer toutes les commandes.",
+    
+    "reply setup": "✅ Configuration terminée! Vous pouvez modifier les paramètres à tout moment via `/setup`."
 }
