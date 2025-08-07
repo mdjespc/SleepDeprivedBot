@@ -17,12 +17,26 @@ using System.Threading.Tasks;
 namespace DiscordBot.Modules.SlashCommands;
 
 [InteractionFramework.Attributes.RequireOwner]
-public class OwnerSlashModule : SlashCommandModule{
-    public OwnerSlashModule(IMongoDbService db, ILanguageManager langManager, ILogger<Bot> logger) : base(db, langManager, logger) {}
+public class OwnerSlashModule : SlashCommandModule
+{
+    public OwnerSlashModule(IMongoDbService db, ILanguageManager langManager, ILogger<Bot> logger) : base(db, langManager, logger) { }
+
+    [SlashCommand("shutdown", "Shut down this bot.")]
+    public async Task ShutdownCommandAsync()
+    {
+        _logger.LogInformation("Shutting down...");
+        await RespondAsync("Shutting down...");
+        await Context.Client.StopAsync();
+        Environment.Exit(0);
+        return;
+    }
 
     [SlashCommand("leave", "Leave this server.")]
-    public async Task LeaveCommandAsync(){
+    public async Task LeaveCommandAsync()
+    {
         _logger.LogInformation($"Left {Context.Guild.Name}");
         await Context.Guild.LeaveAsync();
     }
-}
+
+    //TODO alert command
+} 
